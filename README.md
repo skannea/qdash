@@ -2,7 +2,7 @@
 ## What is Qdash?
 Qdash is an environment for developing web pages that display Home Assistant entities as boxes.
 
-Qdash is based on
+Qdash is based on:
 - HA web server 
 - HA automation blueprint
 - Mosquitto MQTT add-on  
