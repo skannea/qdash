@@ -67,8 +67,9 @@ The following options are available:
    </body>
 
 
-| element | meaning |
-| body  | When the page is loaded, `onLoad()` is called to set up config parameters that are applied to the boxes and then start the communication.  | 
+ | element | meaning |
+ |--------|--------|
+ | body  | When the page is loaded, `onLoad()` is called to set up config parameters that are applied to the boxes and then start the communication.  |
  |  class="page" | Mandatory element to contain a set of boxes. Multiple elements may be provided, see #multiple pages.  |  
  | class="box" | The box elements. |
 
