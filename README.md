@@ -10,19 +10,20 @@ Qdash is based on:
 - one short CSS file
 - one pretty simple JavaScript file
 - external CSS for material design icons 
-- external JavaScript mqtt client library 
+- external JavaScript MQTT client library 
 
 ## Simple HTML
-  <body onload="onLoad();"> 
-     <div class="page">
-        <div class="box" id="sensor.outdoor_temperature"></div>
-        <div class="box" id="sensor.bedroom_temperature"></div>
-        <div class="box" id="sensor.garage_temperature"></div>
-     <div class="box" id="switch.garage_radiator"></div>
-        <div class="box" id="light.outdoor_lamp"></div>
-        <div class="box" id="script.all_lamps_off"></div>
-     </div>
-  </body>
+
+    <body onload="onLoad();"> 
+       <div class="page">
+          <div class="box" id="sensor.outdoor_temperature"></div>
+          <div class="box" id="sensor.bedroom_temperature"></div>
+          <div class="box" id="sensor.garage_temperature"></div>
+          <div class="box" id="switch.garage_radiator"></div>
+          <div class="box" id="light.outdoor_lamp"></div>
+          <div class="box" id="script.all_lamps_off"></div>
+       </div>
+    </body>
 
 ## Front-end
 A Qdash web application is set up as a simple HTML page defining a set of boxes.
