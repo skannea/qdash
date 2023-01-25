@@ -165,5 +165,35 @@ Example:
 Config parameters may be set from url request parameters, for example:
 `config.columns = getUrlParam('columns', '2' );`
 
+## MQTT sequence
 
+          User       Browser                            Home Assistant 
+                                    
+          URL ------------------------- GET ----------> web server
+                     onLoad()      <--- page ---------- web server
+                     onConfigDone()
+                     mqttConnect() ----> MQTT broker    
+                     onConnect()   <---- MQTT broker           
+                     nextRequest() -----/request -----> automation                       
+                     onMessage()   <----/response ----- automation         
+                     nextRequest() -----/request  ----> automation                       
+                     onMessage()   <----/response ----- automation         
+                     ...
+                     onMessage()   <----/state -------- automation <--- state change event
+                     onMessage()   <----/state -------- automation <--- state change event
+                     ...
+           click --> onClick()     -----/button ------> automation ---> state change request
+                     onMessage()   <----/state -------- automation <--- state change event
+                     
+ ## Security
+ 
+ - HTTPS is used 
+ - Nginx is set up to limit access to other pages 
+ - Nginx user/password is required to get page
+ - MQTT broker is accessed via Nginx using Web Sockets Secure
+ - MQTT user/password is required 
+ - MQTT access control list is used to restrict allowed topics 
+ - Automation restricts the set of entities to be accessed
+ 
+ 
 
