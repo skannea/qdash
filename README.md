@@ -59,6 +59,7 @@ The following options are available:
 | area="AREA"   |         	where AREA is overriding the entity's area name |
 | arid="AREAID"    |      	where AREAID is overriding the entity's area id |
 
+
 ## HTML page structure
 ### Mandatory elements
     <body onload="onLoad();"> 
@@ -77,26 +78,18 @@ The following options are available:
 ### Multiple pages
 It is possible to define several pages, each with a set of boxes. Only one page will be visible at a time.
     
-    <div class="page" id="pg1">
+    <div class="page" id="upstairs">
        <div class="box" id=...></box>
        …
        <div class="box" id=...></box>
     </div>
-    <div class="page" id="pg2">
+    <div class="page" id="downstairs">
        <div class="box" id=...></box>
        …
        <div class="box" id=...></box>
     </div>
 
 Use the function `onShowPage( page_id )` to switch between pages. 
-Example:
-Put following code after the pages for switching between three pages with ids pg1, pg2 and pg3:
-
-    <div class="nobox"> 
-       <p onclick="onShowPage('pg1')">Page 1</p> 
-       <p onclick="onShowPage('pg2')">Page 2</p> 
-       <p onclick="onShowPage('pg3')">Page 3</p> 
-    </div>
 
 
 ### Optional elements
@@ -116,7 +109,36 @@ Other elements may be placed
         </div>
         <div class="nobox"></div>
      </body>
+
+Text should be inserted in `<div class="nobox"></div>` as elements, for example just before `</body>`:
+
+    <div class="nobox">
+       <h2>Guest dashboard</h2>
+       <p>Welcome to control my home. Use the buttons below to switch between views.</p>
+       <button onclick="onShowPage('upstairs'  )">Upstairs</button> 
+       <button onclick="onShowPage('downstairs')">Downtairs</button> 
+       <button onclick="onShowPage('outdoors'  )">Outdoors</button> 
+    </div>
+    
+
+The default styling of some common element types are:
+
+       h1     { color: blue;  font-size: 300%; }
+       h2     { color: blue;  font-size: 250%; }
+       p      { color: black; font-size: 100%; }
+       button { color: white; background-color: darkblue; font-size: 100%; width: 6em; }
+
+You can change this own styling, for example:
+
+     <style>
+       /* user styles */
+       h3     { color: blue;  font-size: 200%; }
+       p      { color: green; }
+     </style>
+
  
+Add this style element in <head> element.
+
 ## Config parameters
 The config parameters are set in the onLoad function.
 ### config.userName, config.password
@@ -152,7 +174,7 @@ config.divLog
 When set to an HTML element id in the HTML code, the debug information is also put in that element. 
 Default is that no such logging is done.
 ### config.areacolor
-Definition of fill colors to be used for HA areas. An area are defined as the HA area_id.
+Definition of fill colors to be used for HA areas. An area is referred to as the HA area_id.
 Optional.
 Example:
 
@@ -165,6 +187,38 @@ Example:
 Config parameters may be set from url request parameters, for example:
 `config.columns = getUrlParam('columns', '2' );`
 
+## Other boxes
+
+### Entity boxes
+As mentioned there are entity boxes. But there are also other types of boxes.
+   
+### Simple boxes
+A box can be just a colored box, optionally with some text in it. There must be no id. An example:
+    
+      <div class="box" fill="green">
+          <p>A simple box</p>
+      </div>
+    
+### HTML coded boxes
+A box may contain more complex HTML code. The example shows a title and a clickable icon. Note that `class="mdi mdi-home"` is the method for addressing the icon. The styles are specified as argument.
+    
+      <div class="box" fill="grey" >
+          <p style="color:blue;">Downstairs</p>
+          <span class="mdi mdi-home" style="color:blue; font-size:300%;" onclick="onShowPage( 'downstairs' )"></span>
+      </div>
+    
+### HTML coded entity boxes
+Entity boxes are pretty simple showing a reported state and/or clickable for requesting a state change.
+    But if you want to affect brightness of a lamp, you need more than that.
+    
+    box may contain more complex HTML code. The example shows a title and a clickable icon. Note that `class="mdi mdi-home"` is the method for addressing the icon. The    
+
+    
+    
+    
+    
+    
+    
 ## MQTT sequence
 
           User       Browser                            Home Assistant 
