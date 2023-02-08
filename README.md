@@ -211,14 +211,8 @@ A box may contain more complex HTML code. The example shows a title and a clicka
 Entity boxes are pretty simple showing a reported state and/or clickable for requesting a state change.
     But if you want to affect brightness of a lamp, you need more than that.
     
-    box may contain more complex HTML code. The example shows a title and a clickable icon. Note that `class="mdi mdi-home"` is the method for addressing the icon. The    
 
-    
-    
-    
-    
-    
-    
+   
 ## MQTT sequence
 
           User       Browser                            Home Assistant 
@@ -248,14 +242,12 @@ Entity boxes are pretty simple showing a reported state and/or clickable for req
  - MQTT user/password is required 
  - MQTT access control list is used to restrict allowed topics 
  - Automation restricts the set of entities to be accessed
- 
- 
 
-##Credentials
+## Credentials
 
 A Qdash page is a static page and the ordinary HA web server is used to load the page. That leads to a trade-off has to be made between safe password handling, a simple access administration and a good user experience. There are multiple ways to go:
 
-###MQTT credentials in the page code
+### MQTT credentials in the page code
 In this case the page itself should not be accessable without a user login.
 The page shall be put in a protected folder and Nginx shall be set up to ask the user for username and password. See xxx.  
 While the browser's ability to remember a site's username and password can be used, this method is easy for the user.
@@ -263,16 +255,16 @@ To enable and disable users the admin changes the Nginx access list.
 It is however easy for a wicked user (with access) to inspect the code and steal the MQTT credentials. Without having access to the page these may be used to control entities the same way as the page. To avoid it, the admin also has to change the MQTT credentials (see xx) as well as the page code. 
 On the other hand, if the user is trusted this should not be a problem at all.
 
-###MQTT credentials as URL request parameters
+### MQTT credentials as URL request parameters
 The MQTT credentials are the access key to HA, so in this case the page itself may be accessable without a user login.   
 The use of HTTPS protects the URL request parameters. With a browser bookmark including the MQTT credentials, this method is very simple to use.
 A wicked user can easily steal the MQTT credentials but on the other hand the admin only have to add and delete the MQTT credentials to enable and disable access.
 A drawback is also that when the page is shown in a normal browser, the address field will show also the credentials. For this reason, an option is provided for removing the requst parameters as well as the history.
 
-###MQTT credentials as user input fields
+### MQTT credentials as user input fields
 If the user manually enters the MQTT credentials each time, there are no trace of them anywhere. However, if the browser don't remember them, this is cumbersome for the user. 
 
-###MQTT credentials as autofill password fields
+### MQTT credentials as autofill password fields
 To make a browser remember a username and a password for a site, a HTML form has to be used, and a successful HTTP POST or GET has to be performed. There is a method provided for this:
 When invoking the Qdash page, a form with input fields for MQTT credentials is showed. If there is a username and password stored in the browser, it should automatically be filled in and the user just clicks a login button to continue. If the user enters a new username and password, another button is clicked. In order to make the browser store the credentials, another page has to be opened. For Qdash this is qdashlogin.html which does nothing except waits for a button click to go back to the original Qdash page. Now the credentials should be stored and a normal login can be made.
 However, tests have shown that all browser do not behave the same. This is the biggest problem with this solution.
