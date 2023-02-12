@@ -243,11 +243,14 @@ Entity boxes are pretty simple showing a reported state and/or clickable for req
  - MQTT access control list is used to restrict allowed topics 
  - Automation restricts the set of entities to be accessed
 
-## Credentials
+## Credentials 
+There are two types of credentials involved:
+- Username and password required to get access to the target page. The access control is implemented in Nginx.
+- MQTT username and password (MQTT user/pass) required to send and receive MQTT messages of specific topics. The access control is implemented in the MQTT broker.
 
-A Qdash page is a static page and the ordinary HA web server is used to load the page. That leads to a trade-off has to be made between safe password handling, a simple access administration and a good user experience. There are multiple ways to go:
+A target page is a static page and the ordinary HA web server is used to load the page. That leads to a trade-off has to be made between safe password handling, a simple access administration and a good user experience. There are multiple ways to go:
 
-### MQTT credentials in the page code
+### MQTT user/pass in the page code
 In this case the page itself should not be accessable without a user login.
 The page shall be put in a protected folder and Nginx shall be set up to ask the user for username and password. See xxx.  
 While the browser's ability to remember a site's username and password can be used, this method is easy for the user.
@@ -268,6 +271,61 @@ If the user manually enters the MQTT credentials each time, there are no trace o
 To make a browser remember a username and a password for a site, a HTML form has to be used, and a successful HTTP POST or GET has to be performed. There is a method provided for this:
 When invoking the Qdash page, a form with input fields for MQTT credentials is showed. If there is a username and password stored in the browser, it should automatically be filled in and the user just clicks a login button to continue. If the user enters a new username and password, another button is clicked. In order to make the browser store the credentials, another page has to be opened. For Qdash this is qdashlogin.html which does nothing except waits for a button click to go back to the original Qdash page. Now the credentials should be stored and a normal login can be made.
 However, tests have shown that all browser do not behave the same. This is the biggest problem with this solution.
+
+# Model
+An app consists of
+- one target page, which is a html page for the Qdash boxes 
+- one or more automations to exchange MQTT messages with the app
+- one or more entry pages, to assign MQTT user/pass and load the target page
+
+
+- an app uses a set of MQTT topics
+- an app uses a specific MQTT user/pass
+- the MQTT topics are configured in the target page
+- the MQTT user/pass is linked to the MQTT topics in the MQTT broker config
+- the MQTT user/pass is set in the entry pages
+
+
+Domains are provided:
+A base domain is defined in duckdns.org, for example myduckname.duckdns.org.
+It is maintained by a HA add-on to link to the current HA internet address.
+All traffic to the base domain and its subdomains, like iron.myduckname.duckdns.org, are redirected by duckdns.org. 
+HTTPS traffic is redirected to port 443.
+The router connecting the local network to the internet is set up to forward port 443 to add-on Nginx Proxy Manager (NPM).
+NPM forwards data to and from the HA web server locally accessed at HA's address and port, for example http://192.168.0.111:8123. 
+NPM is configured so specific locations of a sub domain are translated to locations managed by the HA web server. For example, https://iron.myduckname.duckdns.org/qdash could be translated to http://192.168.0.111:8123/local/qdash.
+NPM is also controlling access to the subdomain by specifying an access list. The access list contains username and password pairs.
+
+Example
+Domain | Access list | Users
+iron.myduckname.duckdns.org | iron group | Bob, Sue, Joe 
+gold.myduckname.duckdns.org | gold group | Rob, Sue, Tom
+
+Folders
+/config/www            |  no access      | root for HA web server pages 
+/config/www/qdash      | ...org/qdash    | qdash.js, qdash.css, qdash.ico, target pages: app01.html, app02.html, app03.html  
+/config/www/qdash/iron | ...org/iron     | entry pages: app01c2.html, app01c4.html, app02c2.html
+/config/www/qdash/gold | ...org/gold     | entry pages: app01c2.html, app01c4.html, app02c2.html   
+
+entry page             |  target page     |
+.../iron/app01c2.html  |  qdash/app01.html?columns=2   |  app01 | -secret-              |
+
+
+
+
+
+
+Domain names iron.skannea.duckdns.org
+Point to wrong port
+Set Access list
+
+
+Location /iron
+http   192.168.0.111/local/qdash/iron    8123
+
+Common for all 
+Location /qdash
+http   192.168.0.111/local/qdash        8123
 
 
 
