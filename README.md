@@ -136,7 +136,6 @@ You can change this own styling, for example:
        p      { color: green; }
      </style>
 
- 
 Add this style element in <head> element.
 
 ## Config parameters
@@ -243,12 +242,12 @@ Entity boxes are pretty simple showing a reported state and/or clickable for req
  - MQTT access control list is used to restrict allowed topics 
  - Automation restricts the set of entities to be accessed
 
-## Credentials 
-There are two types of credentials involved:
-- Username and password required to get access to the target page. The access control is implemented in Nginx.
-- MQTT username and password (MQTT user/pass) required to send and receive MQTT messages of specific topics. The access control is implemented in the MQTT broker.
+## Discussion on access credentials 
+There are two types of access credentials involved:
+- **page access** - username and password required to get access to the web pages. The page access control is implemented in Nginx.
+- **MQTT access* - username and password (**app MQTT user/pass**) required to send and receive MQTT messages of specific topics. The MQTT access control is implemented in the MQTT broker.
 
-A target page is a static page and the ordinary HA web server is used to load the page. That leads to a trade-off has to be made between safe password handling, a simple access administration and a good user experience. There are multiple ways to go:
+An **app target page** is a static page and the ordinary HA web server is used to host the page. That leads to a trade-off has to be made between safe password handling, a simple access administration and a good user experience. There are multiple ways to go:
 
 ### MQTT user/pass in the page code
 In this case the page itself should not be accessable without a user login.
@@ -272,43 +271,65 @@ To make a browser remember a username and a password for a site, a HTML form has
 When invoking the Qdash page, a form with input fields for MQTT credentials is showed. If there is a username and password stored in the browser, it should automatically be filled in and the user just clicks a login button to continue. If the user enters a new username and password, another button is clicked. In order to make the browser store the credentials, another page has to be opened. For Qdash this is qdashlogin.html which does nothing except waits for a button click to go back to the original Qdash page. Now the credentials should be stored and a normal login can be made.
 However, tests have shown that all browser do not behave the same. This is the biggest problem with this solution.
 
-# Model
-An app consists of
-- one target page, which is a html page for the Qdash boxes 
-- one or more automations to exchange MQTT messages with the app
-- one or more entry pages, to assign MQTT user/pass and load the target page
+# The app concepts
+    
+An **app** consists of:
+- one **app target page**, which is a html page for the Qdash boxes 
+- one or more **app automations** to exchange MQTT messages with the **app target page**
+- optionally, one or more **app entry pages**, to assign **app MQTT user/pass** and load the **app target page**
 
+MQTT characteristics of an **app**:
+- it uses a set of **app MQTT topics** when sending to HA, for example *fromapp/app01/#*
+- it uses a set of **app MQTT topics** when receiving from HA, for example *toapp/app01/#*
+- it uses a specific **app MQTT user/pass** pair, for example *app01* and *zygr78p*
+- **app MQTT topics** are assigned in the **app target page**
+- **app MQTT topics** are assigned in the **app automations**
+- **app MQTT user/pass** is linked to the **app MQTT topics** in the MQTT broker configuration
 
-- an app uses a set of MQTT topics
-- an app uses a specific MQTT user/pass
-- the MQTT topics are configured in the target page
-- the MQTT user/pass is linked to the MQTT topics in the MQTT broker config
-- the MQTT user/pass is set in the entry pages
+# Providing the app MQTT user/pass 
 
+The **app MQTT user/pass** may be provided to the **app** in alternative ways:
+- directly in the code of the **app target page** - **CODE**
+- as URL request parameters *mqttuser* and *mqttpass* - **URL**
+- using an **app entry page** that uses the browser *sessionStorage* - **STORE**
+- prompting the user for input each time the **app** is started - **PROMPT**
+- using the browser password manager - **AUTH**
+    
+# Nginx for security
+    
+Nginx Proxy Manager add-on (**NPM**) is used for secure communication over internet:
+- **https** for web pages
+- **wss** for MQTT
+When required, NPM is also controlling page access by specifying access lists. An access list contains username and password pairs and is assigned a specific sub domain, like *iron.myduckname.duckdns.org*.
 
-Domains are provided:
-A base domain is defined in duckdns.org, for example myduckname.duckdns.org.
-It is maintained by a HA add-on to link to the current HA internet address.
-All traffic to the base domain and its subdomains, like iron.myduckname.duckdns.org, are redirected by duckdns.org. 
-HTTPS traffic is redirected to port 443.
-The router connecting the local network to the internet is set up to forward port 443 to add-on Nginx Proxy Manager (NPM).
-NPM forwards data to and from the HA web server locally accessed at HA's address and port, for example http://192.168.0.111:8123. 
-NPM is configured so specific locations of a sub domain are translated to locations managed by the HA web server. For example, https://iron.myduckname.duckdns.org/qdash could be translated to http://192.168.0.111:8123/local/qdash.
-NPM is also controlling access to the subdomain by specifying an access list. The access list contains username and password pairs.
+## DDNS   
+    
+For pages, a **base domain** is set up under *duckdns.org*, for example *myduckname.duckdns.org*.
+It is maintained by the HA add-on *Duck DNS* to always point to the current HA internet ip address.
+All traffic to the base domain and its subdomains, like *iron.myduckname.duckdns.org*, are redirected by *duckdns.org* service. 
 
-Example
+## Routing 
+    
+- The router connecting the local network to the internet is set up to forward https port 443 to NPM.
+- NPM forwards data to and from the HA web server locally accessed at HA's address and port, for example http://192.168.0.111:8123. 
+- NPM is configured so specific locations of a sub domain are translated into locations managed by the HA web server. For example, *https://iron.myduckname.duckdns.org/qdash* could be translated to *http://192.168.0.111:8123/local/qdash*.
+- NPM also translates MQTT traffic. For example *wss://mqtt.myduckname.duckdns.org:8884* could be translated to *ws://192.168.0.111:1884*.
+
+    Example
 Domain | Access list | Users
 iron.myduckname.duckdns.org | iron group | Bob, Sue, Joe 
 gold.myduckname.duckdns.org | gold group | Rob, Sue, Tom
 
 Folders
-/config/www            |  no access      | root for HA web server pages 
-/config/www/qdash      | ...org/qdash    | qdash.js, qdash.css, qdash.ico, target pages: app01.html, app02.html, app03.html  
-/config/www/qdash/iron | ...org/iron     | entry pages: app01c2.html, app01c4.html, app02c2.html
-/config/www/qdash/gold | ...org/gold     | entry pages: app01c2.html, app01c4.html, app02c2.html   
+| folder               |  subdomain       | content |
+|----------------------|------------------|---------|    
+|/config/www            |  no access      | root for HA web server pages |
+|/config/www/qdash      | ...org/qdash    | qdash.js, qdash.css, qdash.ico, target pages: app01.html, app02.html, app03.html  |
+|/config/www/qdash/iron | ...org/iron     | entry pages: app01c2.html, app01c4.html, app02c2.html|
+|/config/www/qdash/gold | ...org/gold     | entry pages: app01c2.html, app01c4.html, app02c2.html   |
 
-entry page             |  target page     |
-.../iron/app01c2.html  |  qdash/app01.html?columns=2   |  app01 | -secret-              |
+|entry page             |  target page     |
+|.../iron/app01c2.html  |  qdash/app01.html?columns=2   |  app01 | -secret-              |
 
 
 
