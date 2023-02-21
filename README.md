@@ -138,6 +138,80 @@ You can change this own styling, for example:
 
 Add this style element in <head> element.
 
+# Entities
+## binary_sensor
+### show (default)
+An icon is changing color. 
+## sensor
+### numeric (d
+A current numeric value is showed. 
+Attributes prec and uom may be used. 
+### text
+Current text is showed. 
+## script
+### toggle (d
+Click on the icon to send a toggle command.
+### show
+Icon color is reflecting current state. 
+## switch
+### toggle (d
+Click on the icon to send a toggle command.
+### show
+Icon color is reflecting current state. 
+## light
+### toggle (d
+Click on the icon to send a toggle command.
+### show
+Icon color is reflecting current state. 
+### bright
+Use up and down arrows to send command to change brightness in steps of 10%. Current percentage is showed.
+## input_boolean
+### toggle (d
+Click on the icon to toggle.
+### show
+Icon color is reflecting current state.         
+## input_number
+Attributes prec and uom may be used. 
+### nextset (d
+Use up and down arrows to send command to change value in predefined steps. Current value is showed.
+### show 
+A current numeric value is showed. 
+
+## input_select
+### nextset (d
+Use up and down arrows to send command to change state according to predefined options. Current option is showed.
+### droplist  
+Attribute options must be set, for example options="alpha,beta,gamma".
+Select one of the texts to send it. A received text changes the selection if defined in options. If not, selection is blanked.
+### dropdict 
+Attribute options with key:text pairs must be set, for example options="1:One,2:Two,3:Three"
+Select one of the texts to send corresponding key. A received key changes the selection if defined in options. If not, selection is blanked. 
+### show
+The current text is showed.
+## input_text 
+### show (d 
+The current text is showed.
+### field 
+Enter the text from keyboard.
+### droplist 
+Attribute options must be set, for example options="alpha,beta,gamma".
+Select one of the texts to send it. A received text changes the selection if defined in options. If not, selection is blanked.
+### dropdict
+Attribute options with key:text pairs must be set, for example options="1:One,2:Two,3:Three"
+Select one of the texts to send corresponding key. A received key changes the selection if defined in options. If not, selection is blanked. 
+## input_datetime
+### settime (d
+Select hours and minutes.
+### showtime 
+Show hours and minutes.
+### setdate
+Select year, month and day.
+### showdate 
+Show year, month and day.
+
+
+
+
 ## Config parameters
 The config parameters are set in the onLoad function.
 ### config.userName, config.password
