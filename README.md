@@ -1,6 +1,6 @@
 # Qdash
 ## What is Qdash?
-Qdash is an environment for developing web pages that display Home Assistant entities as boxes.
+Qdash is an environment for makeing web pages that display Home Assistant entities as boxes.
 
 Qdash is based on:
 - HA web server 
@@ -14,14 +14,14 @@ Qdash is based on:
 
 ## Simple HTML
 
-    <body onload="onLoad();"> 
-       <div class="page">
-          <div class="box" id="sensor.outdoor_temperature"></div>
-          <div class="box" id="sensor.bedroom_temperature"></div>
-          <div class="box" id="sensor.garage_temperature"></div>
-          <div class="box" id="switch.garage_radiator"></div>
-          <div class="box" id="light.outdoor_lamp"></div>
-          <div class="box" id="script.all_lamps_off"></div>
+    <body onload="start();"> 
+       <div class="section">
+          <div entity="sensor.outdoor_temperature"></div>
+          <div entity="sensor.bedroom_temperature"></div>
+          <div entity="sensor.garage_temperature"></div>
+          <div entity="switch.garage_radiator"></div>
+          <div entity="light.outdoor_lamp"></div>
+          <div entity="script.all_lamps_off"></div>
        </div>
     </body>
 
@@ -36,28 +36,36 @@ Access rules are implemented using Nginx and MQTT user/password options.
 To serve the web application there must be an automation to send state changes to the web application and receive requests from the web application. This automation is based on a blueprint. The automation also provides information about the entities, such as name, area and unit of measurements. When the web application is started, it requests this information. 
 
 ## The boxes
-Each box has a title and a value reflecting the current entity state. By default 
-- for a sensor, the value is numeric and followed by a unit of measure.
-- for a binary_sensor, the value is replaced by an icon that can change color.
-- for switches, lights and scripts, the value is a clickable icon. 
+A box shows a name and a state of an entity. By default
+- the name is the entity friendly name.
+- the state is visualized in a way that is based on the entity domain.
+- when relevant, input is based on the entity domain. 
+
+For example a box for a typical sensor shows a numeric followed by a unit of measure and a switch is a clickable icon that changes color.
 
 A box may also be customized by adding options to the HTML element, e.g.:
 
-`<div class="box" id="sensor.bedroom_temperature" 
- name="Bed room" fill="darkgreen"></div>`
+`<div entity="sensor.bedroom_temperature" 
+ name="Bedroom" fill="darkgreen"></div>`
 
-The following options are available:
-| option |  meaning |
-|--------|----------|
-| fill="COLOR"  |         	where COLOR sets the color of the box   |  
-| name="NAME"    |       	where NAME is overriding the entity's friendly_name  |   
-| uom="UOM"  |             	where UOM is overriding the entity's unit_of_measurement |
-| prec="PREC"    |         	where PREC is overriding the entity's number of decimals (0..) |
-| icon="ICON"    |          	where mdi:ICON is overriding the entity's icon |
-| domain="DOMAIN" |  	where DOMAIN is overriding domain in entity_id |
-| dcls="DCLS"   |          	where DCLS is overriding the entity's device_class  |
-| area="AREA"   |         	where AREA is overriding the entity's area name |
-| arid="AREAID"    |      	where AREAID is overriding the entity's area id |
+The following options are available, but have no meaning if not relevant for the domain:
+| option |  meaning | example |
+|--------|----------|---------|
+| fill="COLOR"  |         	where COLOR sets the color of the box   |  fill="blue", fill="#1AF5" |  
+| name="NAME"    |       	where NAME is overriding the entity's friendly_name  |  name="Outdoor lamp" 
+| uom="UOM"  |             	where UOM is overriding the entity's unit_of_measurement | uom="m/s", uom="" |
+| prec="PREC"    |         	where PREC is overriding the entity's number of decimals (0..) | uom="0" |
+| icon="ICON"    |          where mdi:ICON is overriding the entity's icon | icon="home" |
+| dcls="DCLS"   |          	where DCLS is overriding the entity's device_class  | dcls="§§ |
+| show         |            show only, the entity state can't be changed  | entity="switch.xyz" show | 
+| view="SECTIONS"  |        where SECTIONS describes how to show and hide sections  | view="first:first,second,third"  | 
+| range="MN,MX,STEP"         |     where MN,MX are min and max values and STEP is step value (input_number) | range="0,100,10" |
+| list="LIST"         |     where LIST is a list of format A,B,C,D for selectable items (input_text and input_select) | list="Stop,Up,Down,Manual" |
+| dict="DICT"         |     where DICT is a dictionary of format a:A,b:B,c:C,d:D for selectable items |  dict="0:Stop,1:Up,2:Down,m:Manual" |
+| set="VALUE"         |     where VALUE is the value to be set for the entity when clicking  |  set="reset" |
+| color="COLOR"         |   where COLOR is a coloring scheme for how to show the state  |  color="0:red,1:green,2:blue,m:grey" |
+| color="COLOR"         |   where COLOR is a coloring scheme for how to show the interval of a numeric state |  see §§ |
+| look="STYLE"  |           where STYLE is overriding the box's state text style |  look="color:red;font-size:50%" |
 
 
 ## HTML page structure
