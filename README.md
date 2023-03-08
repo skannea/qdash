@@ -15,7 +15,7 @@ Qdash is based on:
 ## Simple HTML
 
     <body onload="start();"> 
-       <div class="section">
+       <div section>
           <div entity="sensor.outdoor_temperature"></div>
           <div entity="sensor.bedroom_temperature"></div>
           <div entity="sensor.garage_temperature"></div>
@@ -51,53 +51,46 @@ A box may also be customized by adding options to the HTML element, e.g.:
 The following options are available, but have no meaning if not relevant for the domain:
 | option |  meaning | example |
 |--------|----------|---------|
-| fill="COLOR"  |         	where COLOR sets the color of the box   |  fill="blue", fill="#1AF5" |  
-| name="NAME"    |       	where NAME is overriding the entity's friendly_name  |  name="Outdoor lamp" 
-| uom="UOM"  |             	where UOM is overriding the entity's unit_of_measurement | uom="m/s", uom="" |
-| prec="PREC"    |         	where PREC is overriding the entity's number of decimals (0..) | uom="0" |
-| icon="ICON"    |          where mdi:ICON is overriding the entity's icon | icon="home" |
-| dcls="DCLS"   |          	where DCLS is overriding the entity's device_class  | dcls="§§ |
-| show         |            show only, the entity state can't be changed  | entity="switch.xyz" show | 
-| view="SECTIONS"  |        where SECTIONS describes how to show and hide sections  | view="first:first,second,third"  | 
-| range="MN,MX,STEP"         |     where MN,MX are min and max values and STEP is step value (input_number) | range="0,100,10" |
-| list="LIST"         |     where LIST is a list of format A,B,C,D for selectable items (input_text and input_select) | list="Stop,Up,Down,Manual" |
-| dict="DICT"         |     where DICT is a dictionary of format a:A,b:B,c:C,d:D for selectable items |  dict="0:Stop,1:Up,2:Down,m:Manual" |
-| set="VALUE"         |     where VALUE is the value to be set for the entity when clicking  |  set="reset" |
-| color="COLOR"         |   where COLOR is a coloring scheme for how to show the state  |  color="0:red,1:green,2:blue,m:grey" |
-| color="COLOR"         |   where COLOR is a coloring scheme for how to show the interval of a numeric state |  see §§ |
-| look="STYLE"  |           where STYLE is overriding the box's state text style |  look="color:red;font-size:50%" |
+| fill="COLOR"  |         	COLOR gives the color of the box. A CSS color name or a code may be used.   |  fill="blue", fill="#1AF5" |  
+| name="NAME"    |       	NAME is overriding the entity's friendly_name presented in the box name line. |  name="Entrance" |
+| uom="UOM"  |             	UOM is overriding the entity's unit_of_measurement. An empty string may be used to tell that this is not a numeric. A space may be used to tell this is a numeric without unit. | uom="m/s", uom="" |
+| prec="PREC"    |         	PREC (precision) is the number of decimals (0..) to be used for a numeric state. Without this option the state is presented without any change. | prec="0" |
+| icon="ICON"    |          For boxes that use an icon, the icon may be set. Note that HA front-end uses default icons but such an icon is not regarded as an entity attribute. However, if an icon is explicitly choosen in HA, this icon becomes an entity attribute. Providing icon="ICON" means that mdi:ICON is to be used. If there is no icon defined, a square (mdi:square) will be used. | entity="switch.xyz" icon="home" |
+| show         |            For entities that normally may be changed, the show option means the entity state can't be changed.  | entity="switch.xyz" show | 
+| view="SECTIONS"  |        SECTIONS describes how to show and hide named sections. The format is "Y:X,Y,Z" meaning: hide sections X, Y and Z and then unhide Y.  | view="first:first,second,third"  | 
+| range="MN,MX,STEP"  |       MN and MX are min and max values and STEP is step value for domain input_number | range="0,100,10" |
+| list="LIST"         |     LIST is a set of options for selectable items (input_text and input_select). The box will  | list="Stop,Up,Down,Manual" |
+| dict="DICT"         |     DICT is a set of key:value pairs of format a:A,b:B,c:C,d:D. It is used for selectable items  (input_text and input_select). |  dict="0:Stop,1:Up,2:Down,m:Manual" |
+| set="VALUE"         |     VALUE is a value to be set for the entity when clicking.  |  set="reset" |
+| color="COLOR"         |   COLOR is a coloring scheme with a set of key:color pairs. Assigning an asterik (\*) as key, defines the color for all other options. |  color="0:red,1:green,2:blue,m:grey,\*:black" |
+| color="COLOR"         |   COLOR may also be used as a coloring scheme (key:color pairs) for numercal values. The key is the lowest value for the color.  | color="-1000:white,0:green,5:yellow,15:red" |
+| look="STYLE"  |           A box's state is by default presented with a specific font and font color. STYLE may override this whith a CSS style string.  |  look="color:red;font-size:50%" |
 
 
 ## HTML page structure
 ### Mandatory elements
-    <body onload="onLoad();"> 
-      <div class="page">
-        <div class="box"></div>
-      </div>
-    </body>
+Mandatory parts of a Qdash HTML page are:
+- one JavaScript function to be called when the page is loaded 
+- body element,  `<body onload="... >...</body>` containing one or more section elements.
+- section elements  `<div section="... >...</div>`, each containing one or more box elements.
+- box elements `<div entity="... ></div>`, each containing HTML code for viewing the box's name and current state and for changing state. 
 
-
- | element | meaning |
- |--------|--------|
- | body  | When the page is loaded, `onLoad()` is called to set up config parameters that are applied to the boxes and then start the communication.  |
- |  class="page" | Mandatory element to contain a set of boxes. Multiple elements may be provided, see #multiple pages.  |  
- | class="box" | The box elements. |
-
-### Multiple pages
-It is possible to define several pages, each with a set of boxes. Only one page will be visible at a time.
+### Multiple sections
+It is possible to define multiple sections, each with a set of boxes. 
+The sections may be divided into section groups. In such a group, only one section will be visible at a time.
     
-    <div class="page" id="upstairs">
-       <div class="box" id=...></box>
-       …
-       <div class="box" id=...></box>
+    <div section="upstairs" show>
+       <div entity="light.hall"></div>
+       <div entity="light.studio"></div>
+       <div entity="sensor.studiotemp"></div>
     </div>
-    <div class="page" id="downstairs">
-       <div class="box" id=...></box>
-       …
-       <div class="box" id=...></box>
+    <div section="downstairs">
+       <div entity="light.bedroom"></div>
+       <div entity="light.lobby"></div>
+       <div entity="sensor.lobbytemp"></div>
     </div>
 
-Use the function `onShowPage( page_id )` to switch between pages. 
+At start, only the upstairs entities are visible. The function `onShowSection( upstairs )` to switch between pages. 
 
 
 ### Optional elements
