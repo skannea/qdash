@@ -75,23 +75,40 @@ Mandatory parts of a Qdash HTML page are:
 - section elements  `<div section="... >...</div>`, each containing one or more box elements.
 - box elements `<div entity="... ></div>`, each containing HTML code for viewing the box's name and current state and for changing state. 
 
-### Multiple sections
+### Sections
+
+A section groups a set of boxes and may have a name. Boxes in an unnamed section are always visible. The visibilty of boxes in a named section are controlled in two ways:
+- If the section has a `show` option it will be unhidden from start.
+- Calling the function `qd.showSection` will hide and unhide sections.
+- A box with option `view` will provide a clickable button that unhides one of a set of sections.
+
+For s section, the following options are available:
+| option |  meaning | example |
+|--------|----------|---------|
+| section        |Tells that it is an unnamed section. Boxes of unnamed sections are always visible.  |  <div section> |
+| section="NAME" |NAME is the name of an named section. |  <div section="Climate"> |
+| show           |Boxes of the sections are visible from start.  | <div section="Climate" show > | 
+| fill="COLOR"   |COLOR gives the color round the boxes of the section. A CSS color name or a code may be used.   |  <div section fill="black"> |  
+
+### Multiple sections and section groups
 It is possible to define multiple sections, each with a set of boxes. 
-The sections may be divided into section groups. In such a group, only one section will be visible at a time.
     
     <div section="upstairs" show>
        <div entity="light.hall"></div>
        <div entity="light.studio"></div>
        <div entity="sensor.studiotemp"></div>
+       <div entity="" view="downstairs:upstairs,downstairs" ></div>
     </div>
     <div section="downstairs">
        <div entity="light.bedroom"></div>
        <div entity="light.lobby"></div>
        <div entity="sensor.lobbytemp"></div>
+       <div entity="" view="upstairs:upstairs,downstairs" ></div>
     </div>
 
-At start, only the upstairs entities are visible. The function `onShowSection( upstairs )` to switch between pages. 
-
+At start, only the upstairs entities are visible. The last box of each section  Call the function `qd.showSection( "upstairs:upstairs,downstairs" )` to switch between sections. 
+The sections may be divided into section groups. In such a group, only one section will be visible at a time.
+le 
 
 ### Optional elements
 
