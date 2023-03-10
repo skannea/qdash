@@ -51,20 +51,22 @@ A box may also be customized by adding options to the HTML element, e.g.:
 The following options are available, but have no meaning if not relevant for the domain:
 | option |  meaning | example |
 |--------|----------|---------|
-| fill="COLOR"  |         	COLOR gives the color of the box. A CSS color name or a code may be used.   |  fill="blue", fill="#1AF5" |  
-| name="NAME"    |       	NAME is overriding the entity's friendly_name presented in the box name line. |  name="Entrance" |
-| uom="UOM"  |             	UOM is overriding the entity's unit_of_measurement. An empty string may be used to tell that this is not a numeric. A space may be used to tell this is a numeric without unit. | uom="m/s", uom="" |
-| prec="PREC"    |         	PREC (precision) is the number of decimals (0..) to be used for a numeric state. Without this option the state is presented without any change. | prec="0" |
-| icon="ICON"    |          For boxes that use an icon, the icon may be set. Note that HA front-end uses default icons but such an icon is not regarded as an entity attribute. However, if an icon is explicitly choosen in HA, this icon becomes an entity attribute. Providing icon="ICON" means that mdi:ICON is to be used. If there is no icon defined, a square (mdi:square) will be used. | entity="switch.xyz" icon="home" |
-| show         |            For entities that normally may be changed, the show option means the entity state can't be changed.  | entity="switch.xyz" show | 
-| view="SECTIONS"  |        SECTIONS describes how to show and hide named sections. The format is "Y:X,Y,Z" meaning: hide sections X, Y and Z and then unhide Y.  | view="first:first,second,third"  | 
-| range="MN,MX,STEP"  |       MN and MX are min and max values and STEP is step value for domain input_number | range="0,100,10" |
-| list="LIST"         |     LIST is a set of options for selectable items (input_text and input_select). The box will  | list="Stop,Up,Down,Manual" |
-| dict="DICT"         |     DICT is a set of key:value pairs of format a:A,b:B,c:C,d:D. It is used for selectable items  (input_text and input_select). |  dict="0:Stop,1:Up,2:Down,m:Manual" |
-| set="VALUE"         |     VALUE is a value to be set for the entity when clicking.  |  set="reset" |
-| color="COLOR"         |   COLOR is a coloring scheme with a set of key:color pairs. Assigning an asterik (\*) as key, defines the color for all other options. |  color="0:red,1:green,2:blue,m:grey,\*:black" |
-| color="COLOR"         |   COLOR may also be used as a coloring scheme (key:color pairs) for numercal values. The key is the lowest value for the color.  | color="-1000:white,0:green,5:yellow,15:red" |
-| look="STYLE"  |           A box's state is by default presented with a specific font and font color. STYLE may override this whith a CSS style string.  |  look="color:red;font-size:50%" |
+| fill="COLOR"  |         	COLOR gives the color of the box. A CSS color name or a code may be used.   |  `<div entity="sensor.outdoor_temp" fill="blue">` |  
+| name="NAME"    |       	NAME is overriding the entity's friendly_name presented in the box name line. |  `<div entity="light.x47sw" name="Entrance">` |
+| uom="UOM"  |             	UOM is overriding the entity's unit_of_measurement. An empty string may be used to tell that this is not a numeric. A space may be used to tell this is a numeric without unit. | `<div entity="input_number.alarm_wind" uom="m/s">` |
+|  prec="PREC"    |         	PREC (precision) is the number of decimals (0..) to be used for a numeric state. Without this option the state is presented without any change. |  `<div entity="sensor.room_humidity" prec="0">` |
+| icon="ICON"    |          For boxes that use an icon, the icon may be set. Note that HA front-end uses default icons but such an icon is not regarded as an entity attribute. However, if an icon is explicitly choosen in HA, this icon becomes an entity attribute. Providing icon="ICON" means that mdi:ICON is to be used. If there is no icon defined, a square (mdi:square) will be used. | `<div entity="light.entrance" icon="home" >` |
+| show         |            For entities that normally may be changed, the show option means the entity state can't be changed.  | `<div entity="switch.heat" show >` | 
+| range="MN,MX,STEP"  |       MN and MX are min and max values and STEP is step value for domain input_number | `<div entity="input_number.level" range="0,100,10">` |
+| list="LIST"         |     LIST is a set of options for selectable items (input_text and input_select). The box will  | `<div entity="input_text.lift" list="Stop,Up,Down,Manual" >`  |
+| dict="DICT"         |     DICT is a set of key:value pairs of format a:A,b:B,c:C,d:D. It is used for selectable items  (input_text and input_select). |  `<div entity="input_text.lift" dict="0:Stop,1:Up,2:Down,m:Manual">`|
+| set="VALUE"         |     VALUE is a value to be set for the entity when clicking.  |  `<div entity="input_text.command" set="reset">` |
+| color="COLOR"         |   COLOR is a coloring scheme with a set of key:color pairs. Assigning an asterik (\*) as key, defines the color for all other options. |  `<div entity="input_text.mode" show icon="cog" color="0:red,1:green,2:blue,m:grey,\*:black">` |
+| color="COLOR"         |   COLOR may also be used as a coloring scheme (key:color pairs) for numercal values. The key is the lowest value for the color.  | `<div entity="sensor.level" color="-1000:white,0:green,5:yellow,15:red">` |
+| look="STYLE"  |           A box's state is by default presented with a specific font and font color. STYLE may override this whith a CSS style string.  |  `<div entity="input_text.warning" look="color:red;font-size:50%">` |
+| bright    |       	Entities of domain light are by default presented as a clickable icon that toggles the light. The `bright` option instead gives the possibility to change the light's brightness. |  `<div entity="light.hall" bright>` |
+| date    |       	Boxes for entityies of domain datetime are by default handling hours and minutes. The `date` option makes the box handle a date. |  `<div entity="datetime.startdate" date>` |
+| view="SECTIONS"  | For controlling which set of boxes to show or hide. See Read more in §§. SECTIONS describes how to show and hide named sections. The format is "Y:X,Y,Z" with meaning: hide sections X, Y and Z and then unhide Y.  | `<div entity="" view="first:first,second,third">`  | 
 
 
 ## HTML page structure
@@ -77,7 +79,9 @@ Mandatory parts of a Qdash HTML page are:
 
 ### Sections
 
-A section groups a set of boxes and may have a name. Boxes in an unnamed section are always visible. The visibilty of boxes in a named section are controlled in two ways:
+A section is a set of boxes and may have a name. 
+Boxes in an unnamed section are always visible. 
+The visibilty of boxes in a named section can be controlled:
 - If the section has a `show` option it will be unhidden from start.
 - Calling the function `qd.showSection` will hide and unhide sections.
 - A box with option `view` will provide a clickable button that unhides one of a set of sections.
@@ -85,10 +89,11 @@ A section groups a set of boxes and may have a name. Boxes in an unnamed section
 For s section, the following options are available:
 | option |  meaning | example |
 |--------|----------|---------|
-| section        |Tells that it is an unnamed section. Boxes of unnamed sections are always visible.  |  <div section> |
-| section="NAME" |NAME is the name of an named section. |  <div section="Climate"> |
-| show           |Boxes of the sections are visible from start.  | <div section="Climate" show > | 
-| fill="COLOR"   |COLOR gives the color round the boxes of the section. A CSS color name or a code may be used.   |  <div section fill="black"> |  
+| section        |Tells that it is an unnamed section. Boxes of unnamed sections are always visible.  |  `<div section>` |
+| section="NAME" |NAME is the name of an named section. |  `<div section="Climate">` |
+| show           |Boxes of the sections are visible from start.  | `<div section="Climate" show >` | 
+| fill="COLOR"   |COLOR gives the color round the boxes of the section. A CSS color name or a code may be used.   |  `<div section fill="black">` |  
+| columns="N"    |N is the number of boxes on each row in the section.  |  `<div section columns="4">` |  
 
 ### Multiple sections and section groups
 It is possible to define multiple sections, each with a set of boxes. 
@@ -107,18 +112,31 @@ It is possible to define multiple sections, each with a set of boxes.
     </div>
 
 At start, only the upstairs entities are visible. The last box of each section  Call the function `qd.showSection( "upstairs:upstairs,downstairs" )` to switch between sections. 
-The sections may be divided into section groups. In such a group, only one section will be visible at a time.
-le 
+Also the sections may be divided into groups. In such a group, only one section will be visible at a time. In the example below there is a last section with four boxes for controlling the two groups.
+    
+    <!-- upstairs/downstairs group --> 
+    <div section="up" show>...</div>
+    <div section="down">...</div>
+    <!-- climate group --> 
+    <div section="temp" show>...</div>
+    <div section="hum">...</div>
+    <!-- navigation section, always visible --> 
+    <div section>
+       <div entity="" name="Upstairs"    view="up:up,down"   ></div>
+       <div entity="" name="Downstairs"  view="down:up,down" ></div>
+       <div entity="" name="Temperature" view="temp:temp,hum"></div>
+       <div entity="" name="Humidity"    view="hum:temp,hum" ></div>
+    </div>
 
 ### Optional elements
 
 Other elements may be placed 
-- above the pages
-- above the boxes in a page
-- below the boxes in a page
-- below the pages
+- above the sections
+- above the boxes in a section
+- below the boxes in a section
+- below the sections
 
-    <body onload="onLoad();"> 
+    <body onload="start();"> 
         <div class="nobox"></div>   
         <div class="page">
           <div class="nobox"></div>   
