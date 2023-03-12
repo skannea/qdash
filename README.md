@@ -14,6 +14,9 @@ Qdash is based on:
 
 ## Simple HTML
 
+A Qdash web application is set up as a simple HTML page defining a set of **entity box**es, that reflects and/or controls an entity.
+For example a box for a typical sensor shows a numeric followed by a unit of measure and a switch is a clickable icon that changes color.
+
     <body onload="start();"> 
        <div section>
           <div entity="sensor.outdoor_temperature"></div>
@@ -25,28 +28,68 @@ Qdash is based on:
        </div>
     </body>
 
-## Front-end
-A Qdash web application is set up as a simple HTML page defining a set of boxes.
 
-Communication with HA is based on MQTT. 
+A box may also be customized by adding options to the HTML element, e.g.:
 
+`<div entity="sensor.bedroom_temperature" name="Bedroom" fill="darkgreen"></div>`
+
+The Qdash web application communicatates with HA using MQTT. 
 Access rules are implemented using Nginx and MQTT user/password options.
+MQTT configuration and page layout is set up as a few lines of JavaScript code.  
 
 ## Back-end
 To serve the web application there must be an automation to send state changes to the web application and receive requests from the web application. This automation is based on a blueprint. The automation also provides information about the entities, such as name, area and unit of measurements. When the web application is started, it requests this information. 
 
-## The boxes
-A box shows a name and a state of an entity. By default
-- the name is the entity friendly name.
-- the state is visualized in a way that is based on the entity domain.
-- when relevant, input is based on the entity domain. 
+# Entity boxes
 
-For example a box for a typical sensor shows a numeric followed by a unit of measure and a switch is a clickable icon that changes color.
+## Behavior
+The table below lists how entities of a domain may visulized and controlled using an entity box. The box behavior is set up directly in the HTML element for the box. The options to put as element arguments are described in Options.
 
-A box may also be customized by adding options to the HTML element, e.g.:
+|domain       |  options        | box behavior  |
+|-------------|-----------------|---------------|
+|binary_sensor||show state as colored icon|
+|binary_sensor|show|show state as colored icon|
+|input_boolean||show state as colored icon, click to toggle on/off|
+|input_boolean|show|show state as colored icon|
+|input_button||show state as colored icon, click to trig|
+|input_datetime||pick a time and confirm|
+|input_datetime| date|pick a date and confirm|
+|input_datetime| show|show time as text|
+|input_datetime| show date|show date as text|
+|input_number |show|show numeric value (optionally with prec and uom) |
+|input_number||toggle states using up/down buttons|
+|input_number| prec show dict| lookup state, show alias as text |
+|input_number|range|select state and confirm|
+|input_select||toggle states using up/down buttons|
+|input_select |set color |show state as colored icon, click to trig|
+|input_select |show color|show state as colored icon| 
+|input_select |show dict|lookup state, show as text |
+|input_select| dict|select alias for state and confirm|
+|input_select| list|select state and confirm|
+|input_select| show|show state as text|
+|input_text||enter state as text| 
+|input_text |set color|show state as colored icon, click to trig|
+|input_text |show color|show state as colored icon|    
+|input_text |show dict|   lookup state, show as alias |
+|input_text |show |show state as text |
+|input_text| dict| select alias for state and confirm|
+|input_text| list |select state and confirm|
+|light ||show state as colored icon, click to toggle on/off|
+|light| bright|change brightness using up/down buttons|
+|light| show|show on/off state as colored icon|
+|script||show as icon, click to run|
+|script|set|show as icon, click to run script with arguments|
+|script|list|select arguments, click to run script with arguments|
+|script|dict|select alias for arguments, click to run script with arguments|
+|sensor* |show |show numeric value (optionally with prec and uom) |
+|sensor* |show dict |lookup state, show as alias |
+|sensor* | show |show state as text|
+|switch ||show state as colored icon, click to toggle on/off|
+|switch| show|show state as colored icon|
 
-`<div entity="sensor.bedroom_temperature" 
- name="Bedroom" fill="darkgreen"></div>`
+* Sensors are regarded as numeric if there is uom or prec for it.
+
+## Options 
 
 The following options are available, but have no meaning if not relevant for the domain:
 | option |  meaning | example |
@@ -69,15 +112,26 @@ The following options are available, but have no meaning if not relevant for the
 | view="SECTIONS"  | For controlling which set of boxes to show or hide. See Read more in §§. SECTIONS describes how to show and hide named sections. The format is "Y:X,Y,Z" with meaning: hide sections X, Y and Z and then unhide Y.  | `<div entity="" view="first:first,second,third">`  | 
 
 
-## HTML page structure
-### Mandatory elements
+# HTML page structure
+
+Boxes are put in rows in the order 
+A box may be 
+- an **entity box**, that reflects and/or controls an entity
+- a **navigation box**, that changes the content of the page
+- an **empty box**, that is for filling out
+- a **custom box**, that is    or .A box shows a name (by default the entity friendly name).
+and reflects ta state of an entity. By default
+- the name is .
+
+
+## Mandatory elements
 Mandatory parts of a Qdash HTML page are:
 - one JavaScript function to be called when the page is loaded 
 - body element,  `<body onload="... >...</body>` containing one or more section elements.
 - section elements  `<div section="... >...</div>`, each containing one or more box elements.
 - box elements `<div entity="... ></div>`, each containing HTML code for viewing the box's name and current state and for changing state. 
 
-### Sections
+## Sections
 
 A section is a set of boxes and may have a name. 
 Boxes in an unnamed section are always visible. 
@@ -86,7 +140,7 @@ The visibilty of boxes in a named section can be controlled:
 - Calling the function `qd.showSection` will hide and unhide sections.
 - A box with option `view` will provide a clickable button that unhides one of a set of sections.
 
-For s section, the following options are available:
+For section, the following options are available:
 | option |  meaning | example |
 |--------|----------|---------|
 | section        |Tells that it is an unnamed section. Boxes of unnamed sections are always visible.  |  `<div section>` |
@@ -95,7 +149,7 @@ For s section, the following options are available:
 | fill="COLOR"   |COLOR gives the color round the boxes of the section. A CSS color name or a code may be used.   |  `<div section fill="black">` |  
 | columns="N"    |N is the number of boxes on each row in the section.  |  `<div section columns="4">` |  
 
-### Multiple sections and section groups
+## Multiple sections and section groups
 It is possible to define multiple sections, each with a set of boxes. 
     
     <div section="upstairs" show>
@@ -128,7 +182,7 @@ Also the sections may be divided into groups. In such a group, only one section 
        <div entity="" name="Humidity"    view="hum:temp,hum" ></div>
     </div>
 
-### Optional elements
+## Optional elements
 
 Other elements may be placed 
 - above the sections
