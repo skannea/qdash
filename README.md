@@ -40,10 +40,10 @@ MQTT configuration and page layout is set up as a few lines of JavaScript code.
 ## Back-end
 To serve the web application there must be an automation to send state changes to the web application and receive requests from the web application. This automation is based on a blueprint. The automation also provides information about the entities, such as name, area and unit of measurements. When the web application is started, it requests this information. 
 
-# Entity boxes
+# Boxes
 
 ## Behavior
-The table below lists how entities of a domain may visulized and controlled using an entity box. The box behavior is set up directly in the HTML element for the box. The options to put as element arguments are described in Options.
+The table below describes how entities of a domain may be visulized and controlled using an entity box. The box behavior is set up directly in the HTML element for the box. The options to put as element arguments are described in [Options](#options).
 
 |domain       |  options        | box behavior  |
 |-------------|-----------------|---------------|
@@ -81,13 +81,13 @@ The table below lists how entities of a domain may visulized and controlled usin
 |script|set|show as icon, click to run script with arguments|
 |script|list|select arguments, click to run script with arguments|
 |script|dict|select alias for arguments, click to run script with arguments|
-|sensor* |show |show numeric value (optionally with prec and uom) |
-|sensor* |show dict |lookup state, show as alias |
-|sensor* | show |show state as text|
+|sensor[^1]| |show numeric value (optionally with prec and uom) |
+|sensor[^1]|| dict |lookup state, show as alias |
+|sensor[^1]|| |show state as text|
 |switch ||show state as colored icon, click to toggle on/off|
 |switch| show|show state as colored icon|
 
-* Sensors are regarded as numeric if there is uom or prec for it.
+[^1]: Sensors are regarded as numeric if there is *uom* or *prec* specified for it. 
 
 ## Options 
 
@@ -104,24 +104,30 @@ The following options are available, but have no meaning if not relevant for the
 | list="LIST"         |     LIST is a set of options for selectable items (input_text and input_select). The box will  | `<div entity="input_text.lift" list="Stop,Up,Down,Manual" >`  |
 | dict="DICT"         |     DICT is a set of key:value pairs of format a:A,b:B,c:C,d:D. It is used for selectable items  (input_text and input_select). |  `<div entity="input_text.lift" dict="0:Stop,1:Up,2:Down,m:Manual">`|
 | set="VALUE"         |     VALUE is a value to be set for the entity when clicking.  |  `<div entity="input_text.command" set="reset">` |
-| color="COLOR"         |   COLOR is a coloring scheme with a set of key:color pairs. Assigning an asterik (\*) as key, defines the color for all other options. |  `<div entity="input_text.mode" show icon="cog" color="0:red,1:green,2:blue,m:grey,\*:black">` |
+| color="COLOR"         |   COLOR is a coloring scheme with a set of key:color pairs. Assigning an asterik (\*) as key, defines the color for all other options. |  `<div entity="input_text.mode" show icon="cog" color="0:red,1:green,2:blue,m:grey,*:black">` |
 | color="COLOR"         |   COLOR may also be used as a coloring scheme (key:color pairs) for numercal values. The key is the lowest value for the color.  | `<div entity="sensor.level" color="-1000:white,0:green,5:yellow,15:red">` |
 | look="STYLE"  |           A box's state is by default presented with a specific font and font color. STYLE may override this whith a CSS style string.  |  `<div entity="input_text.warning" look="color:red;font-size:50%">` |
 | bright    |       	Entities of domain light are by default presented as a clickable icon that toggles the light. The `bright` option instead gives the possibility to change the light's brightness. |  `<div entity="light.hall" bright>` |
 | date    |       	Boxes for entityies of domain datetime are by default handling hours and minutes. The `date` option makes the box handle a date. |  `<div entity="datetime.startdate" date>` |
 | view="SECTIONS"  | For controlling which set of boxes to show or hide. See Read more in §§. SECTIONS describes how to show and hide named sections. The format is "Y:X,Y,Z" with meaning: hide sections X, Y and Z and then unhide Y.  | `<div entity="" view="first:first,second,third">`  | 
 
+## Other boxes
 
-# HTML page structure
+### Navigation box
+A navigation box is used for turning on and off sections, see [Sections](sections). By default it has a clickable square icon
+Available options are 
+ <div entity="" name="Upstairs"    view="up:up,down"   ></div>
+### Empty box 
+Empty boxes are for structuring the page. An empty box is just a colored box, but may have a name. The tag must be either `<div entity="">` or just `<div entity>`.
+Available options are:
+- fill
+- name
+Example: `<div entity="" fill="indigo" name="Lights"></div> `
 
-Boxes are put in rows in the order 
-A box may be 
-- an **entity box**, that reflects and/or controls an entity
-- a **navigation box**, that changes the content of the page
-- an **empty box**, that is for filling out
-- a **custom box**, that is    or .A box shows a name (by default the entity friendly name).
+### Custom box
 and reflects ta state of an entity. By default
 - the name is .
+## HTML page structure
 
 
 ## Mandatory elements
@@ -396,7 +402,7 @@ Entity boxes are pretty simple showing a reported state and/or clickable for req
            click --> onClick()     -----/button ------> automation ---> state change request
                      onMessage()   <----/state -------- automation <--- state change event
                      
- ## Security
+ # Security
  
  - HTTPS is used 
  - Nginx is set up to limit access to other pages 
