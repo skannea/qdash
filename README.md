@@ -141,6 +141,7 @@ Optional attributes are
 - name 
 
 An example: 
+
     <div custom fill="grey" >
        <p style="color:blue">Do some magic</p>
        <span style="color:red" class="mdi mdi-home" onclick="doMagic()"></span>
