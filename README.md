@@ -298,6 +298,46 @@ lookup |O| Pre-defined color schemes. See [Lookup strings](#lookup_strings).
 Config parameters may be set from url request parameters, for example:
 `config.columns = getUrlParam('columns', '2' );`
 
+# Work flow
+
+## First application
+
+Note that this application is intended to run on your local network only. 
+
+### Preparations
+
+- Mosquitto 
+  - add-on must be installed and configured 
+  - port 1884 for MQTT over web sockets must be enabled
+  - a username and password must be set
+- File editor
+  - add-on must be installed (or you must have some other way to edit files) 
+- HA web server
+  - must be configured to host files in /config/www/
+- Qdash blueprint
+  - must be installed
+- Qdash files
+  - must be put in /config/www/qdash/ :
+    - qdash.js
+    - qdash.css
+    - qdash.html
+
+To make a first try with Qdash, follow the steps below:
+1. make an automation based on the blueprint
+2. select mqtt topics
+3. choose the entities you would like to have in the application
+4. save the automation
+5. edit first.html
+6. change configuration in start function
+7. set up your entity boxes 
+8. save
+9. in a browser, enter address to the page http://homeassistant.local:8123/local/qdash/first.html
+
+
+Tips and tricks
+..a good idea is to open in yaml mode and copy the list of entities
+..paste the list of entities,  
+
 
 
 
@@ -321,7 +361,9 @@ Config parameters may be set from url request parameters, for example:
                      ...
            click --> onClick()     -----/button ------> automation ---> state change request
                      onMessage()   <----/state -------- automation <--- state change event
-                     
+ 
+    
+    
  # Security
  
  - HTTPS is used 
