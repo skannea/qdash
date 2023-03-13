@@ -1,7 +1,7 @@
 # Qdash
 ## What is Qdash?
 Qdash is an environment for makeing web pages that display Home Assistant entities as boxes.
-
+![ccc](./images/Qdash.png)
 Qdash is based on:
 - HA web server 
 - HA automation blueprint
@@ -109,13 +109,14 @@ The following options are available, but have no meaning if not relevant for the
 | look="STYLE"  |           A box's state is by default presented with a specific font and font color. STYLE may override this whith a CSS style string.  |  `<div entity="input_text.warning" look="color:red;font-size:50%">` |
 | bright    |       	Entities of domain light are by default presented as a clickable icon that toggles the light. The `bright` option instead gives the possibility to change the light's brightness. |  `<div entity="light.hall" bright>` |
 | date    |       	Boxes for entityies of domain datetime are by default handling hours and minutes. The `date` option makes the box handle a date. |  `<div entity="datetime.startdate" date>` |
-| view="SECTIONS"  | For controlling which set of boxes to show or hide. See Read more in §§. SECTIONS describes how to show and hide named sections. The format is "Y:X,Y,Z" with meaning: hide sections X, Y and Z and then unhide Y.  | `<div entity="" view="first:first,second,third">`  | 
 
 ## Other boxes
 
 ### View box
-A view box is used for turning on and off sections, see [Sections](sections). By default it has a clickable square icon.
-The **view** attribute is mandatory.
+A view box is used for turning on and off sections, see [Sections](sections). 
+The **view** attribute is mandatory. The format is `view="Y:X,Y,Z"` with meaning: hide sections X, Y and Z and then unhide Y.  
+By default the box has a clickable square icon.
+
 Optional attributes are 
 - name 
 - fill 
@@ -208,9 +209,9 @@ Also the sections may be divided into groups. In such a group, only one section 
        <div name="Humidity"    view="hum:temp,hum" ></div>
     </div>
 
-## Optional elements
+## Adding extra elements
 
-Other `<div>` elements may be placed 
+Extra `<div>` elements for text, buttons, images etcetera, may be added 
 - above the sections
 - above the boxes in a section
 - below the boxes in a section
@@ -228,25 +229,31 @@ Such elements must be of `class="nobox"`.
         <div class="nobox">After section</div>
     </body>
 
+The styling of extra element is dependent on the section. 
+A section with only extra elements may be added, for example.
+   <div section="header" fill="yellow" columns="3">      
+      <div class="nobox">
+          <h1>Qdash</h1>
+          <p>This is a web application</p> 
+      </div>   
+   </div>   
+
 The default styling of some common element types are:
 
-       h1     { color: blue;  font-size: 300%; }
-       h2     { color: blue;  font-size: 250%; }
-       p      { color: black; font-size: 100%; }
-       button { color: white; background-color: darkblue; font-size: 100%; width: 6em; }
+       h1     { color: blue;  font-size: 100%; }
+       h2     { color: blue;  font-size:  80%; }
+       p      { color: black; font-size:  50%; }
 
-You can apply your own styling, for example:
-
+To change or add styling, add a <style> element in the <head> element of the page file.
+For example:    
+    
      <style>
-       /* user styles */
        h3     { color: blue;  font-size: 200%; }
        p      { color: green; }
      </style>
 
-Add this style element in the <head> element of your HTML file.
-
 ## Configuration
-Configuration is made when the page is loaded. 
+Configuration is made when the page is loaded, see [Start function](#start_function).    
 
 There are tho types of configuration
 - MQTT configuration, in mqtt.config
@@ -284,7 +291,9 @@ onUpdateBox|O|Custom function that is called for each state update. See [Hook fu
 defaultonoffcolor|O| Colors to be used for on/off state indication. Default is "on:gold,off:grey,*:red".
 lookup |O| Pre-defined color schemes. See [Lookup strings](#lookup_strings).
 
-
+# Start function
+    
+    
 ### URL request parameters
 Config parameters may be set from url request parameters, for example:
 `config.columns = getUrlParam('columns', '2' );`
