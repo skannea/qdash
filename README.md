@@ -113,20 +113,39 @@ The following options are available, but have no meaning if not relevant for the
 
 ## Other boxes
 
-### Navigation box
-A navigation box is used for turning on and off sections, see [Sections](sections). By default it has a clickable square icon
-Available options are 
- <div entity="" name="Upstairs"    view="up:up,down"   ></div>
+### View box
+A view box is used for turning on and off sections, see [Sections](sections). By default it has a clickable square icon.
+The **view** attribute is mandatory.
+Optional attributes are 
+- name 
+- fill 
+- icon 
+- look
+
+An example:  `<div view="up:up,down" name="Upstairs" fill="blue" icon="cog" look="color:white"></div>`
+
 ### Empty box 
-Empty boxes are for structuring the page. An empty box is just a colored box, but may have a name. The tag must be either `<div entity="">` or just `<div entity>`.
-Available options are:
+Empty boxes are for structuring the page. An empty box is just a colored box, but it may have a name. 
+The **empty** attribute is mandatory.
+Optional attributes are 
 - fill
 - name
-Example: `<div entity="" fill="indigo" name="Lights"></div> `
+
+An example: `<div empty fill="indigo" name="Lights"></div> `
 
 ### Custom box
-and reflects ta state of an entity. By default
-- the name is .
+A custom box is intended for any kind of content, within the limits of what can be visualized.
+The **custom** attribute is mandatory.
+Optional attributes are 
+- fill
+- name 
+
+An example: 
+    <div custom fill="grey" >
+       <p style="color:blue">Do some magic</p>
+       <span style="color:red" class="mdi mdi-home" onclick="doMagic()"></span>
+    </div>  
+
 ## HTML page structure
 
 
@@ -162,13 +181,13 @@ It is possible to define multiple sections, each with a set of boxes.
        <div entity="light.hall"></div>
        <div entity="light.studio"></div>
        <div entity="sensor.studiotemp"></div>
-       <div entity="" view="downstairs:upstairs,downstairs" ></div>
+       <div view="downstairs:upstairs,downstairs" ></div>
     </div>
     <div section="downstairs">
        <div entity="light.bedroom"></div>
        <div entity="light.lobby"></div>
        <div entity="sensor.lobbytemp"></div>
-       <div entity="" view="upstairs:upstairs,downstairs" ></div>
+       <div view="upstairs:upstairs,downstairs" ></div>
     </div>
 
 At start, only the upstairs entities are visible. The last box of each section  Call the function `qd.showSection( "upstairs:upstairs,downstairs" )` to switch between sections. 
@@ -182,40 +201,31 @@ Also the sections may be divided into groups. In such a group, only one section 
     <div section="hum">...</div>
     <!-- navigation section, always visible --> 
     <div section>
-       <div entity="" name="Upstairs"    view="up:up,down"   ></div>
-       <div entity="" name="Downstairs"  view="down:up,down" ></div>
-       <div entity="" name="Temperature" view="temp:temp,hum"></div>
-       <div entity="" name="Humidity"    view="hum:temp,hum" ></div>
+       <div name="Upstairs"    view="up:up,down"   ></div>
+       <div name="Downstairs"  view="down:up,down" ></div>
+       <div name="Temperature" view="temp:temp,hum"></div>
+       <div name="Humidity"    view="hum:temp,hum" ></div>
     </div>
 
 ## Optional elements
 
-Other elements may be placed 
+Other `<div>` elements may be placed 
 - above the sections
 - above the boxes in a section
 - below the boxes in a section
 - below the sections
 
+Such elements must be of `class="nobox"`.
+
     <body onload="start();"> 
-        <div class="nobox"></div>   
-        <div class="page">
-          <div class="nobox"></div>   
-          <div class="box"></div>
-          <div class="nobox"></div>   
+        <div class="nobox">Above sections</div>   
+        <div section="sec01">
+          <div class="nobox">In section</div>   
+          <div empty></div>
+          <div class="nobox">In section</div>   
         </div>
-        <div class="nobox"></div>
-     </body>
-
-Text should be inserted in `<div class="nobox"></div>` as elements, for example just before `</body>`:
-
-    <div class="nobox">
-       <h2>Guest dashboard</h2>
-       <p>Welcome to control my home. Use the buttons below to switch between views.</p>
-       <button onclick="onShowPage('upstairs'  )">Upstairs</button> 
-       <button onclick="onShowPage('downstairs')">Downtairs</button> 
-       <button onclick="onShowPage('outdoors'  )">Outdoors</button> 
-    </div>
-    
+        <div class="nobox">After section</div>
+    </body>
 
 The default styling of some common element types are:
 
@@ -224,7 +234,7 @@ The default styling of some common element types are:
        p      { color: black; font-size: 100%; }
        button { color: white; background-color: darkblue; font-size: 100%; width: 6em; }
 
-You can change this own styling, for example:
+You can apply your own styling, for example:
 
      <style>
        /* user styles */
@@ -232,154 +242,54 @@ You can change this own styling, for example:
        p      { color: green; }
      </style>
 
-Add this style element in <head> element.
+Add this style element in the <head> element of your HTML file.
 
-# Entities
-## binary_sensor
-### show (default)
-An icon is changing color. 
-## sensor
-### numeric (d
-A current numeric value is showed. 
-Attributes prec and uom may be used. 
-### text
-Current text is showed. 
-## script
-### toggle (d
-Click on the icon to send a toggle command.
-### show
-Icon color is reflecting current state. 
-## switch
-### toggle (d
-Click on the icon to send a toggle command.
-### show
-Icon color is reflecting current state. 
-## light
-### toggle (d
-Click on the icon to send a toggle command.
-### show
-Icon color is reflecting current state. 
-### bright
-Use up and down arrows to send command to change brightness in steps of 10%. Current percentage is showed.
-## input_boolean
-### toggle (d
-Click on the icon to toggle.
-### show
-Icon color is reflecting current state.         
-## input_number
-Attributes prec and uom may be used. 
-### nextset (d
-Use up and down arrows to send command to change value in predefined steps. Current value is showed.
-### show 
-A current numeric value is showed. 
+## Configuration
+Configuration is made when the page is loaded. 
 
-## input_select
-### nextset (d
-Use up and down arrows to send command to change state according to predefined options. Current option is showed.
-### droplist  
-Attribute options must be set, for example options="alpha,beta,gamma".
-Select one of the texts to send it. A received text changes the selection if defined in options. If not, selection is blanked.
-### dropdict 
-Attribute options with key:text pairs must be set, for example options="1:One,2:Two,3:Three"
-Select one of the texts to send corresponding key. A received key changes the selection if defined in options. If not, selection is blanked. 
-### show
-The current text is showed.
-## input_text 
-### show (d 
-The current text is showed.
-### field 
-Enter the text from keyboard.
-### droplist 
-Attribute options must be set, for example options="alpha,beta,gamma".
-Select one of the texts to send it. A received text changes the selection if defined in options. If not, selection is blanked.
-### dropdict
-Attribute options with key:text pairs must be set, for example options="1:One,2:Two,3:Three"
-Select one of the texts to send corresponding key. A received key changes the selection if defined in options. If not, selection is blanked. 
-## input_datetime
-### settime (d
-Select hours and minutes.
-### showtime 
-Show hours and minutes.
-### setdate
-Select year, month and day.
-### showdate 
-Show year, month and day.
+There are tho types of configuration
+- MQTT configuration, in mqtt.config
+- application configuration, in qd.config
+
+A configuration item may be mandatory (M) or optional (O).
+
+### The mqtt.config object  
+
+item       |  M/O  | description  
+-----------|-------|---------------|
+userName |M| MQTT user name. 
+password  |M| MQTT password to give access to HA MQTT broker. User name/password pairs are defined in Mosquitto add-on configuration. 
+host |M| Web address to be used to connect to MQTT broker.
+config.port |M|Port to be used to connect to MQTT broker.
+useSSL |M| When set to true, secure websocket protocol is used. This is strongly recommended when accessing the MQTT broker from internet.
+client |M| Name of the MQTT client. To make a unique name the following expression may be used: `'qdash_'+ Math.floor(Date.now() / 1000);`. 
+timeout |M| Timeout in ms for MQTT connection retrial. 
 
 
+### The qd.config object  
+
+item       |  M/O  | description  
+-----------|-------|---------------|
+stateTopic |M| MQTT topic for updating entity state. Sent from HA to the web application. 
+buttonTopic |M| MQTT topic to be used for telling HA that a clickable icon was clicked. 
+requestTopic|M| MQTT topic for requesting HA for entity information. 
+responseTopic|M|MQTT topic for providing entity information. Sent from HA to the web application.  
+columns|O| Number of box columns.This value may be overridden for each section. Default is 2.
+width|O| Percent of the total width to be used for the box columns. Default is 100.
+consoleLog|O| When true, debug information is sent to console.log. This is default.
+divLog|O|When set to an HTML element id in the HTML code, the debug information is also put in that element. Default is that no such logging is done.
+onConfigBox|O|Custom function that is called for each entity response. See [Hook functions](#hook_functions).
+onUpdateBox|O|Custom function that is called for each state update. See [Hook functions](#hook_functions).
+defaultonoffcolor|O| Colors to be used for on/off state indication. Default is "on:gold,off:grey,*:red".
+lookup |O| Pre-defined color schemes. See [Lookup strings](#lookup_strings).
 
 
-## Config parameters
-The config parameters are set in the onLoad function.
-### config.userName, config.password
-MQTT user name and password to give access to HA MQTT broker. User name/password pairs are defined in Mosquitto add-on configuration. 
-Mandatory.
-### config.host, config.port, config.useSSL
-Web address and port to be used to connect to MQTT broker.
-When config.useSSL is set to true, secure websocket protocol is used. This is strongly recommended when accessing the MQTT broker from internet.
-Mandatory.
-### config.client
-Name of the MQTT client.
-To make a unique name the following expression may be used:
-    'qdash_'+ Math.floor(Date.now() / 1000); 
-### config.timeout
-Timeout in ms for MQTT connection retrial. Mandatory.
-### config.stateTopic
-MQTT topic for updating entity state. Sent from HA to the web application. Mandatory. 
-### config.buttonTopic
-MQTT topic to be used for telling HA that a clickable icon was clicked. Mandatory. 
-### config.requestTopic
-MQTT topic for requesting HA for entity information. Mandatory. 
-### config.responseTopic
-MQTT topic for providing entity information. Sent from HA to the web application. Mandatory. 
-### config.columns
-Number of box columns.
-Default is 2.
-### config.width
-Percent of the total width to be used for the box columns. 
-Default is 100.
-### config.consoleLog
-When true, debug information is sent to console.log. Default.
-config.divLog
-When set to an HTML element id in the HTML code, the debug information is also put in that element. 
-Default is that no such logging is done.
-### config.areacolor
-Definition of fill colors to be used for HA areas. An area is referred to as the HA area_id.
-Optional.
-Example:
-
-    config.areacolor = {
-       livingroom = 'navy',
-       kitchen    = 'purple',
-       bedroom    = '#34AB34'
-    }
-
+### URL request parameters
 Config parameters may be set from url request parameters, for example:
 `config.columns = getUrlParam('columns', '2' );`
 
-## Other boxes
 
-### Entity boxes
-As mentioned there are entity boxes. But there are also other types of boxes.
-   
-### Simple boxes
-A box can be just a colored box, optionally with some text in it. There must be no id. An example:
-    
-      <div class="box" fill="green">
-          <p>A simple box</p>
-      </div>
-    
-### HTML coded boxes
-A box may contain more complex HTML code. The example shows a title and a clickable icon. Note that `class="mdi mdi-home"` is the method for addressing the icon. The styles are specified as argument.
-    
-      <div class="box" fill="grey" >
-          <p style="color:blue;">Downstairs</p>
-          <span class="mdi mdi-home" style="color:blue; font-size:300%;" onclick="onShowPage( 'downstairs' )"></span>
-      </div>
-    
-### HTML coded entity boxes
-Entity boxes are pretty simple showing a reported state and/or clickable for requesting a state change.
-    But if you want to affect brightness of a lamp, you need more than that.
-    
+
 
    
 ## MQTT sequence
