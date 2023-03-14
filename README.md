@@ -1,6 +1,6 @@
 # Qdash
 ## What is Qdash?
-Qdash is an environment for makeing web pages that display Home Assistant entities as boxes.
+Qdash is an environment for making web pages that display Home Assistant entities as boxes.
 ![ccc](./images/Qdash.png)
 Qdash is based on:
 - HA web server 
@@ -112,6 +112,15 @@ The following options are available, but have no meaning if not relevant for the
 
 ## Other boxes
 
+### Empty box 
+Empty boxes are for structuring the page. An empty box is just a colored box, but it may have a name. 
+The **empty** attribute is mandatory.
+Optional attributes are 
+- fill
+- name
+
+An example: `<div empty fill="indigo" name="Lights"></div> `
+
 ### View box
 A view box is used for turning on and off sections, see [Sections](sections). 
 The **view** attribute is mandatory. The format is `view="Y:X,Y,Z"` with meaning: hide sections X, Y and Z and then unhide Y.  
@@ -124,15 +133,6 @@ Optional attributes are
 - look
 
 An example:  `<div view="up:up,down" name="Upstairs" fill="blue" icon="cog" look="color:white"></div>`
-
-### Empty box 
-Empty boxes are for structuring the page. An empty box is just a colored box, but it may have a name. 
-The **empty** attribute is mandatory.
-Optional attributes are 
-- fill
-- name
-
-An example: `<div empty fill="indigo" name="Lights"></div> `
 
 ### Custom box
 A custom box is intended for any kind of content, within the limits of what can be visualized.
@@ -150,13 +150,25 @@ An example:
 
 ## HTML page structure
 
-
-## Mandatory elements
-Mandatory parts of a Qdash HTML page are:
-- one JavaScript function to be called when the page is loaded 
-- body element,  `<body onload="... >...</body>` containing one or more section elements.
-- section elements  `<div section="... >...</div>`, each containing one or more box elements.
-- box elements `<div entity="... ></div>`, each containing HTML code for viewing the box's name and current state and for changing state. 
+A Qdash HTML page includes (with *first.html* as an example):
+- title element `<title>Qdash First</title>` for the name of the application
+- favicon link `<link rel="icon" href="qdashfavicon.ico" type="image/x-icon" />`
+- inclusion of JavaScript files
+  - MQTT client library
+  - qdash.js   
+- inclusion of CSS files
+  - material design icons
+  - qdash.css
+- JavaScript code
+  - function to be called when the page is loaded, in the examples named `start()` 
+  - optional functions 
+- body element,  `<body onload="start()">...</body>` containing one or more section elements
+- section elements  `<div section... >...</div>`, each containing one or more box elements
+  - entity box elements `<div entity=... ></div>`, each containing HTML code for viewing the box's name and current state and for changing state. 
+  - optional empty box elements `<div empty ... ></div>`
+  - optional view box elements `div view=... ></div>`
+  - optional custom box elements `div custom... >...</div>`
+- extra elements inside or outside the sections
 
 ## Sections
 
@@ -177,6 +189,7 @@ For section, the following options are available:
 | columns="N"    |N is the number of boxes on each row in the section.  |  `<div section columns="4">` |  
 
 ## Multiple sections and section groups
+
 It is possible to define multiple sections, each with a set of boxes. 
     
     <div section="upstairs" show>
@@ -231,6 +244,7 @@ Such elements must be of `class="nobox"`.
 
 The styling of extra element is dependent on the section. 
 A section with only extra elements may be added, for example.
+
    <div section="header" fill="yellow" columns="3">      
       <div class="nobox">
           <h1>Qdash</h1>
@@ -253,11 +267,11 @@ For example:
      </style>
 
 ## Configuration
-Configuration is made when the page is loaded, see [Start function](#start_function).    
+Configuration items are set up when the page is loaded, see [Start function](#start_function).    
 
-There are tho types of configuration
-- MQTT configuration, in mqtt.config
-- application configuration, in qd.config
+There are two types of configuration:
+- MQTT configuration, in object mqtt.config
+- application configuration, in object qd.config
 
 A configuration item may be mandatory (M) or optional (O).
 
@@ -265,13 +279,13 @@ A configuration item may be mandatory (M) or optional (O).
 
 item       |  M/O  | description  
 -----------|-------|---------------|
-userName |M| MQTT user name. 
-password  |M| MQTT password to give access to HA MQTT broker. User name/password pairs are defined in Mosquitto add-on configuration. 
+userName |M| MQTT user name. User name/password pairs are defined in Mosquitto add-on configuration.
+password  |M| MQTT password to give access to HA MQTT broker.  
 host |M| Web address to be used to connect to MQTT broker.
-config.port |M|Port to be used to connect to MQTT broker.
+port |M|Port to be used to connect to MQTT broker.
 useSSL |M| When set to true, secure websocket protocol is used. This is strongly recommended when accessing the MQTT broker from internet.
 client |M| Name of the MQTT client. To make a unique name the following expression may be used: `'qdash_'+ Math.floor(Date.now() / 1000);`. 
-timeout |M| Timeout in ms for MQTT connection retrial. 
+timeout |O| Timeout in ms for MQTT connection retrial. Default is 2000. 
 
 
 ### The qd.config object  
