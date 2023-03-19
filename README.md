@@ -312,9 +312,43 @@ lookup |O| Pre-defined color schemes. See [Lookup strings](#lookup_strings).
 Config parameters may be set from url request parameters, for example:
 `config.columns = getUrlParam('columns', '2' );`
 
-# Work flow
+# H Hook functions
+Hook functions are functions that will be called at certain events.
 
-## First application
+## onConfigBox
+When the app is started, a request is sent to HA for each defined box. When the corresponding response is received, the onConfigBox function is called. It has one argument: an object `data` that contains the response. This is input to the function.
+
+input       |  description  
+-----------|--------------
+data.ent|entity id
+data.name|friendly name
+data.uom|unit of measure
+data.icon|icon for entity
+data.scls|class
+data.dcls|device class
+data.area|area name
+data.arid|area id
+data.status |found or not found 
+data.ix| box number 0..
+data.key|unique key for client
+
+The app may use these data as input and change the data object and/or add any of the items that normally is added as options for the data.
+All data values are strings. Note that a value `'None'` or an empty string means that the value is absent.
+Example:
+    function myBoxConfig( data ) {
+       if ( data.arid  == 'lounge' )  data.fill = 'purple';
+       if ( data.arid  == 'bedroom' ) data.fill = 'navy';
+
+       // rule: set number of decimals (prec) depending on device_class
+       if ( data.dcls  == 'temperature' ) data.prec = '1';
+       if ( data.dcls  == 'humidity' )    data.prec = '0';
+       if ( data.dcls  == 'voltage' )     data.prec = '2';
+    }
+
+## onConfigBox
+
+
+# First application
 
 Note that this application is intended to run on your local network only. 
 
