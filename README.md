@@ -410,6 +410,37 @@ Tips and tricks
            click --> onClick()     -----/button ------> automation ---> state change request
                      onMessage()   <----/state -------- automation <--- state change event
  
+
+ # Operations
+When an entity box icon is clicked, an operation is carried out as a HA service call. Operations and services are listed in the table below:
+    
+| operation  |  description | service |  
+|------------|--------------|---------|
+| toggle| toggle binary entity state | homeassistant.toggle| 
+| run| run script with up to 3 space separated arguments | script.turn_on| 
+| press| activate| input_button.press| 
+| bright| add value in percent to brightness | light.turn_on, brightness_step_pct| 
+| settext| update with text value | input_text.set_value| 
+| setnumber| update with numeric value | input_number.set_value| 
+| increment | make predefined step up| input_number.increment| 
+| decrement | make predefined step down| input_number.decrement| 
+| next  | select next predefined option| input_select.select_next| 
+| previous  | select previous predefined option| input_select.select_previous| 
+| select| select option by value| input_select.select_option| 
+| settime| update time with value hh:mm:ss | input_datetime.set_datetime|  
+| setdate| update date with value YYYY:MM:DD| input_datetime.set_datetime| 
+              
+It is possible to simulate a click by calling function `qd.onClick( ENTITY, OPERATION, VALUE )` where 
+- ENTITY is the entity_id
+- OPERATION is the operation
+- VALUE is the value, if this is required for the operation
+    
+Examples:
+    
+    qd.onClick( 'light.mylight', 'toggle' );
+    qd.onClick( 'script.runmotor', 'run', 'start 500' );
+    qd.onClick( 'input_select.bedroom_mode', 'cosy' );
+
     
     
  # Security
