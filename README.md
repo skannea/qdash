@@ -312,11 +312,11 @@ lookup |O| Pre-defined color schemes. See [Lookup strings](#lookup_strings).
 Config parameters may be set from url request parameters, for example:
 `config.columns = getUrlParam('columns', '2' );`
 
-# H Hook functions
+# Hook functions
 Hook functions are functions that will be called at certain events.
 
 ## onConfigBox
-When the app is started, a request is sent to HA for each defined box. When the corresponding response is received, the onConfigBox function is called. It has one argument: an object `data` that contains the response. This is input to the function.
+When the app is started, a request is sent to HA for each defined box. When the corresponding response is received and the `qd.config.onConfigBox` is assigned a function, this function is called. It has one argument: an object `data` that contains the response. This is input to the function, but may also be updated by the function.
 
 input       |  description  
 -----------|--------------
@@ -334,7 +334,9 @@ data.key|unique key for client
 
 The app may use these data as input and change the data object and/or add any of the items that normally is added as options for the data.
 All data values are strings. Note that a value `'None'` or an empty string means that the value is absent.
+    
 Example:
+    
     function myBoxConfig( data ) {
        if ( data.arid  == 'lounge' )  data.fill = 'purple';
        if ( data.arid  == 'bedroom' ) data.fill = 'navy';
@@ -345,9 +347,33 @@ Example:
        if ( data.dcls  == 'voltage' )     data.prec = '2';
     }
 
-## onConfigBox
+## onUpdateBox
+When an entity is changed, or after a request, a message is sent from HA to the Qdash application. When received and the `qd.config.onUpdateBox` is assigned a function, this function is called. It takes one argument: an object that `data` that contains the following items:
+input       |  description  
+-----------|--------------
+data.ent|entity id
+data.state|current entity state value 
+data.bright|brightness value, for light domain only
+data.trig| `init` if this was caused by a request or `change` if it was caused by a state change
 
-
+The app may use these data as input and change the data object. All data values are strings. 
+    
+Example:
+    
+    function myBoxUpdate( data ) {
+     // in HTML code there is a <div class="nobox"><p id="messageline"></p></div>
+        if ( data.ent  == 'input_text.message' )  {
+           document.getElementById( 'messageline' ).innerHTML = 'Important: ' + data.state;
+        }
+        
+        if ( data.ent  == 'sensor.quality' ) {
+           var v = parseInt( data.state );
+           if (v < 5) data.state = 'bad';
+           else           
+           if (v < 10) data.state = 'OK';
+           else        data.state = 'excellent';
+     }     
+    
 # First application
 
 Note that this application is intended to run on your local network only. 
