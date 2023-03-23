@@ -50,6 +50,7 @@ The table below describes how entities of a domain may be visulized and controll
 |binary_sensor||show state as colored icon|
 |binary_sensor|show|show state as colored icon|
 |input_boolean||show state as colored icon, click to toggle on/off|
+|input_boolean|set|show state as colored icon, turn on or off|
 |input_boolean|show|show state as colored icon|
 |input_button||show state as colored icon, click to trig|
 |input_datetime||pick a time and confirm|
@@ -76,18 +77,20 @@ The table below describes how entities of a domain may be visulized and controll
 |input_text| list |select state and confirm|
 |light ||show state as colored icon, click to toggle on/off|
 |light| bright|change brightness using up/down buttons|
+|light|set|show state as colored icon, turn on or off|
 |light| show|show on/off state as colored icon|
 |script||show as icon, click to run|
 |script|set|show as icon, click to run script with arguments|
 |script|list|select arguments, click to run script with arguments|
 |script|dict|select alias for arguments, click to run script with arguments|
-|sensor[^1]| |show numeric value (optionally with prec and uom) |
-|sensor[^1]|| dict |lookup state, show as alias |
-|sensor[^1]|| |show state as text|
+|sensor| |show numeric value (optionally with prec and uom) |
+|sensor|| dict |lookup state, show as alias |
+|sensor|| |show state as text|
 |switch ||show state as colored icon, click to toggle on/off|
+|switch|set|show state as colored icon, turn on or off|
 |switch| show|show state as colored icon|
 
-[^1]: Sensors are regarded as numeric if there is *uom* or *prec* specified for it. 
+Sensors are regarded as numeric if there is *uom* or *prec* specified for it. 
 
 ## Options 
 
@@ -245,12 +248,12 @@ Such elements must be of `class="nobox"`.
 The styling of extra element is dependent on the section. 
 A section with only extra elements may be added, for example.
 
-   <div section="header" fill="yellow" columns="3">      
+    <div section="header" fill="yellow" columns="3">      
       <div class="nobox">
           <h1>Qdash</h1>
           <p>This is a web application</p> 
       </div>   
-   </div>   
+    </div>   
 
 The default styling of some common element types are:
 
