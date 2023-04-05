@@ -75,20 +75,20 @@ The table below describes how entities of a domain may be visulized and controll
 |input_text |show |show state as text |
 |input_text| dict| select alias for state and confirm|
 |input_text| list |select state and confirm|
-|light ||show state as colored icon, click to toggle on/off|
-|light| bright|change brightness using up/down buttons|
-|light|set|show state as colored icon, turn on or off|
-|light| show|show on/off state as colored icon|
-|script||show as icon, click to run|
-|script|set|show as icon, click to run script with arguments|
+|light |    |show state as colored icon, click to toggle on/off|
+|light |bright|change brightness using up/down buttons|
+|light |set |show state as colored icon, turn on or off|
+|light |show|show on/off state as colored icon|
+|script|    |show as icon, click to run|
+|script|set |show as icon, click to run script with arguments|
 |script|list|select arguments, click to run script with arguments|
 |script|dict|select alias for arguments, click to run script with arguments|
-|sensor| |show numeric value (optionally with prec and uom) |
-|sensor|| dict |lookup state, show as alias |
-|sensor|| |show state as text|
-|switch ||show state as colored icon, click to toggle on/off|
-|switch|set|show state as colored icon, turn on or off|
-|switch| show|show state as colored icon|
+|sensor|    |show numeric value (optionally with prec and uom) |
+|sensor|dict|lookup state, show as alias |
+|sensor|    |show state as text|
+|switch|    |show state as colored icon, click to toggle on/off|
+|switch|set |show state as colored icon, turn on or off|
+|switch|show|show state as colored icon|
 
 Sensors are regarded as numeric if there is *uom* or *prec* specified for it. 
 
@@ -289,6 +289,11 @@ port |M|Port to be used to connect to MQTT broker.
 useSSL |M| When set to true, secure websocket protocol is used. This is strongly recommended when accessing the MQTT broker from internet.
 client |M| Name of the MQTT client. To make a unique name the following expression may be used: `'qdash_'+ Math.floor(Date.now() / 1000);`. 
 timeout |O| Timeout in ms for MQTT connection retrial. Default is 2000. 
+log |O| Function( TEXT ) to be called when MQTT errors happen. 
+debug |O| Function( TEXT ) to be called with MQTT progress information. 
+onSuccess |O| Hook function( ) to be called when MQTT connection is established. 
+onFailure |O| Hook function( CAUSE ) to be called when MQTT connection fails or is disconnected. CAUSE is an error message text. 
+onMessage |O| Hook function( TOPIC, DATA ) to be called when a MQTT message is received. Topic is the MQTT topic of the message. DATA is an object created from the received JSON coded MQTT payload. 
 
 
 ### The qd.config object  
@@ -303,10 +308,12 @@ columns|O| Number of box columns.This value may be overridden for each section. 
 width|O| Percent of the total width to be used for the box columns. Default is 100.
 consoleLog|O| When true, debug information is sent to console.log. This is default.
 divLog|O|When set to an HTML element id in the HTML code, the debug information is also put in that element. Default is that no such logging is done.
-onConfigBox|O|Custom function that is called for each entity response. See [Hook functions](#hook_functions).
-onUpdateBox|O|Custom function that is called for each state update. See [Hook functions](#hook_functions).
+onConfigBox|O|Hook function that is called for each entity response. 
+onUpdateBox|O|Hook function that is called for each state update. 
 defaultonoffcolor|O| Colors to be used for on/off state indication. Default is "on:gold,off:grey,*:red".
 lookup |O| Pre-defined color schemes. See [Lookup strings](#lookup_strings).
+log |O| Hook function( TEXT ) to be called with errors and warnings. 
+debug |O| Hook function( TEXT ) to be called with debug information. 
 
 # Start function
     
@@ -316,7 +323,7 @@ Config parameters may be set from url request parameters, for example:
 `config.columns = getUrlParam('columns', '2' );`
 
 # Hook functions
-Hook functions are functions that will be called at certain events.
+A hook function is a function that, if it is defined, will be called at certain events. 
 
 ## onConfigBox
 When the app is started, a request is sent to HA for each defined box. When the corresponding response is received and the `qd.config.onConfigBox` is assigned a function, this function is called. It has one argument: an object `data` that contains the response. This is input to the function, but may also be updated by the function.
