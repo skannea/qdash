@@ -1,0 +1,118 @@
+/* 
+Qdash styles
+
+Following is configured in code:
+- qd.config.width, in percent of total view width
+- qd.config.columns, number of boxes to fit in the width
+- section attribute columns, will override qd.config.columns for that section 
+
+Following is calculated:
+- section width
+- box width
+- box margin and padding
+- body font-size
+- section font-size 
+
+Inside a section, font sizes are set in percent of section font size.
+Outside all sections, font sizes are set in percent of body font size. 
+
+In the descriptions below
+- 'of section' means in relation to section font-size  
+- 'of xxxx' means in relation to xxxx font-size 
+- 'of parent' means in relation to parent 
+
+
+*/  
+  
+   
+* 
+{
+ font-family:sans-serif;  
+ margin: 0;
+ border: 0;
+ padding: 0;
+ background-color: transparent;
+ color: darkgrey;
+
+} 
+
+body 
+{
+  background-color: white; 
+}
+
+.section 
+{    
+   float: left;
+   background-color:silver;  
+   overflow:hidden;
+ /*width: set dynamically */
+   font-size: inherit; /* by default */
+   display:none;
+
+
+}
+
+.box  {
+  float: left;
+  height: 1.4em;  
+
+  border: 0;  
+  border-radius: 0.1em;
+  background-color:darkslategrey;   
+
+  text-align: center; 
+  white-space: nowrap;
+  overflow: hidden;
+
+  font-size: inherit;
+
+  
+/*set dynamically
+  margin:
+  padding:
+  width:
+  */
+ 
+}
+
+  
+
+.nobox {
+  float: left;
+  width: 100%;   
+  font-size: inherit;
+  margin: 0.5vw;
+}    
+
+
+h1         { color: blue; font-size: 100%; }  /* of parent */ 
+h2         { color: blue; font-size:  80%; }  /* of parent */
+h3         { color: blue; font-size:  50%; }  /* of parent */
+p          { color: black; font-size: 30%; }  /* of parent */
+button     { color: white; background-color: darkblue; font-size: 30%; width: 6em; } /* of super */
+select     { font-size:  60%; color:inherit; } /* of box */
+option     { font-size:  100%; color:inherit; background-color: darkblue; } /* of select */
+input      { font-size:  100%; color:inherit; } /* of box */
+span       { font-size: 100%; color: inherit; } 
+
+div.box    { font-size: 100%; color:gold;  }  /* of section */
+p.title    { font-size:  30%; color:white; }  /* of box */
+.uom       { font-size:  50%; color:white; }  /* of parent: box or midpart */
+.midpart   { font-size:  50%; color:inherit; display:inline-block; width:2.5em; text-align:right;  } /* of box */
+.sidepart  { font-size:  60%; color:white; }  /* of value */
+
+.bigsize   { font-size: 100%; color:white;}  /* of  parent */
+.midsize   { font-size:  80%; color:white;}  /* of  parent */
+.smallsize { font-size:  40%; color:white;}  /* of  parent */
+.halfsize  { font-size:  20%; color:white;}  /* of  parent */
+
+#statusline { color:blue; font-size:30%;  } 
+
+#creds * { padding:1vw; margin:1vw; font-size:5vw;  width:45vw;}
+#creds button { color: white; background-color: darkblue;   border:0.1vw solid black; }
+#creds label  { color:black;  float:left;   } 
+#creds input  { color:black;  border:0.1vw solid black;} 
+
+ 
+    

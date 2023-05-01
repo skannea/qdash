@@ -1,0 +1,315 @@
+blueprint:
+  name: Qdash publisher  
+  description: "For Qdash automations."  
+  domain: automation 
+  input:
+    w_ents:   # a list
+      name: Write entities 
+      description: "Entities that may be controlled" 
+      selector:
+        entity:
+          multiple: true
+    r_ents:   # a list
+      name: Read entities 
+      description: "Entities that are allowed to read only" 
+      selector:
+        entity:
+          multiple: true
+    mqttstate:   
+      name: State topic 
+      description: "Outgoing topic for entity changes" 
+      default: "toweb/qdash/state"
+      selector:
+        text:
+    mqttbutton:   
+      name: Button topic 
+      description: "Incoming topic for button actions" 
+      default: "fromweb/qdash/button"
+      selector:
+        text:
+    mqttrequest:   
+      name: Request topic 
+      default: "fromweb/qdash/request"
+      description: "Incoming topic for config request" 
+      selector:
+        text:
+    mqttresponse:   
+      name: Response topic 
+      default: "toweb/qdash/response"
+      description: "Outgoing topic for config response" 
+      selector:
+        text:
+
+
+variables:
+  w_entities:  !input w_ents
+  r_entities:  !input r_ents
+ 
+
+
+trigger:
+# entity state change --> mqtt publish state 
+  - platform: state
+    entity_id:
+      !input w_ents
+    id: w_change
+
+# entity state change --> mqtt publish state 
+  - platform: state
+    entity_id:
+      !input r_ents
+    id: r_change
+    
+# mqtt request --> publish mqtt config+state 
+  - platform: mqtt
+    topic: !input mqttrequest
+    id: request
+    
+# mqtt button --> toggle entity state 
+  - platform: mqtt
+    topic: !input mqttbutton
+    id: button
+    
+
+action:
+  - choose:
+
+# entity state change --> mqtt publish state  
+      - conditions:
+         - condition: or
+           conditions:
+             - condition: trigger
+               id: w_change
+             - condition: trigger
+               id: r_change
+        sequence:
+          - service: mqtt.publish
+            data:
+              topic: !input mqttstate
+              payload_template: >-
+                {"ent":"{{ trigger.entity_id }}", 
+                 "trig":"change", 
+                 "state":"{{   trigger.to_state.state}}", 
+                 "bright":"{{  state_attr( trigger.entity_id, 'brightness' ) }}"
+                }
+
+
+# mqtt request + OK entity --> publish mqtt response + state 
+      - conditions:
+          - condition: trigger
+            id: request
+          - condition: or
+            conditions:
+              - condition: template
+                value_template: "{{trigger.payload_json.ent in r_entities }}"
+              - condition: template
+                value_template: "{{trigger.payload_json.ent in w_entities }}"
+
+        sequence:
+          - service: mqtt.publish
+            data:
+              topic: !input mqttresponse
+              payload_template: >-
+                 {  "ent":"{{ trigger.payload_json.ent }}", 
+                    "ix":"{{ trigger.payload_json.ix }}", 
+                    "uom": "{{ state_attr( trigger.payload_json.ent, 'unit_of_measurement' ) }}",
+                    "icon":"{{ state_attr( trigger.payload_json.ent, 'icon' ) }}",
+                    "scls":"{{ state_attr( trigger.payload_json.ent, 'state_class' ) }}",
+                    "dcls":"{{ state_attr( trigger.payload_json.ent, 'device_class' ) }}",
+                    "area":"{{  area_name( trigger.payload_json.ent ) }}",
+                    "arid":"{{  area_id(   trigger.payload_json.ent ) }}",
+                    "name":"{{ state_attr( trigger.payload_json.ent, 'friendly_name' ) }}", 
+                    "status":"found" } 
+ 
+
+          - service: mqtt.publish
+            data:
+              topic: !input mqttstate
+              payload_template: >-
+                {"ent":"{{ trigger.payload_json.ent }}", 
+                 "trig":"init", 
+                 "bright":"{{  state_attr( trigger.payload_json.ent, 'brightness' ) }}",
+                 "state":"{{       states( trigger.payload_json.ent) }}" }
+                 
+
+# mqtt request but not an entity or not an allowed entity --> publish mqtt short response 
+      - conditions:
+          - condition: trigger
+            id: request
+
+        sequence:
+          - service: mqtt.publish
+            data:
+              topic: !input mqttresponse
+              payload_template: >-
+                 {  "ent":"{{ trigger.payload_json.ent }}", 
+                    "ix":"{{ trigger.payload_json.ix }}",
+                    "status":"not found" } 
+
+# mqtt button, but not allowed w_entity --> nothing 
+      - conditions:
+          - condition: trigger
+            id: button
+          - condition: template
+            value_template: "{{not trigger.payload_json.ent in w_entities }}"
+
+        sequence:
+           # do nothing
+
+# mqtt button, op=           
+# toggle --> toggle entity state 
+      - conditions:   
+          - condition: trigger
+            id: button
+          - condition: template
+            value_template: "{{trigger.payload_json.op == 'toggle' }}"
+   
+        sequence:
+          - service: homeassistant.toggle
+            data: '{"entity_id": "{{trigger.payload_json.ent}}"  }'
+
+# run  --> turn on script 
+      - conditions:   
+          - condition: trigger
+            id: button
+          - condition: template
+            value_template: "{{trigger.payload_json.op == 'run' }}"
+   
+        sequence:
+          - service: script.turn_on
+            data: 
+              entity_id: "{{trigger.payload_json.ent}}"
+              variables: 
+                 arg0: "{{trigger.payload_json.arg0}}" 
+                 arg1: "{{trigger.payload_json.arg1}}" 
+                 arg2: "{{trigger.payload_json.arg2}}" 
+
+# bright  --> brightness_step_pct value
+      - conditions:   
+          - condition: trigger
+            id: button
+          - condition: template
+            value_template: "{{trigger.payload_json.op == 'bright' }}"
+  
+        sequence:
+          - service: light.turn_on
+            data: '{"entity_id": "{{trigger.payload_json.ent}}", "brightness_step_pct": "{{trigger.payload_json.value}}" }'
+
+# increment  
+      - conditions:   
+          - condition: trigger
+            id: button
+          - condition: template
+            value_template: "{{trigger.payload_json.op == 'increment' }}"
+   
+        sequence:
+          - service: input_number.increment
+            data: '{"entity_id": "{{trigger.payload_json.ent}}" }'
+
+# decrement 
+      - conditions:   
+          - condition: trigger
+            id: button
+          - condition: template
+            value_template: "{{trigger.payload_json.op == 'decrement' }}"
+  
+        sequence:
+          - service: input_number.decrement
+            data: '{"entity_id": "{{trigger.payload_json.ent}}" }'
+
+# next  
+      - conditions:   
+          - condition: trigger
+            id: button
+          - condition: template
+            value_template: "{{trigger.payload_json.op == 'next' }}"
+  
+        sequence:
+          - service: input_select.select_next
+            data: '{"entity_id": "{{trigger.payload_json.ent}}" }'
+
+# previous  
+      - conditions:   
+          - condition: trigger
+            id: button
+          - condition: template
+            value_template: "{{trigger.payload_json.op == 'previous' }}"
+  
+        sequence:
+          - service: input_select.select_previous
+            data: '{"entity_id": "{{trigger.payload_json.ent}}" }'
+
+# settime  --> hh:mm:ss 
+      - conditions:   
+          - condition: trigger
+            id: button
+          - condition: template
+            value_template: "{{trigger.payload_json.op == 'settime' }}"
+  
+        sequence:
+          - service: input_datetime.set_datetime
+            data: '{"entity_id": "{{trigger.payload_json.ent}}", "time": "{{trigger.payload_json.value}}"  }'
+
+# setdate  --> YYYY:MM:DD
+      - conditions:   
+          - condition: trigger
+            id: button
+          - condition: template
+            value_template: "{{trigger.payload_json.op == 'setdate' }}"
+  
+        sequence:
+          - service: input_datetime.set_datetime
+            data: '{"entity_id": "{{trigger.payload_json.ent}}", "date": "{{trigger.payload_json.value}}"  }'
+
+# settext 
+      - conditions:   
+          - condition: trigger
+            id: button
+          - condition: template
+            value_template: "{{trigger.payload_json.op == 'settext' }}"
+  
+        sequence:
+          - service: input_text.set_value
+            data: '{"entity_id": "{{trigger.payload_json.ent}}", "value": "{{trigger.payload_json.value}}"  }'
+
+# select
+      - conditions:   
+          - condition: trigger
+            id: button
+          - condition: template
+            value_template: "{{trigger.payload_json.op == 'select' }}"
+  
+        sequence:
+          - service: input_select.select_option
+            data: '{"entity_id": "{{trigger.payload_json.ent}}", "option": "{{trigger.payload_json.value}}"  }'
+
+# setnumber
+      - conditions:   
+          - condition: trigger
+            id: button
+          - condition: template
+            value_template: "{{trigger.payload_json.op == 'setnumber' }}"
+  
+        sequence:
+          - service: input_number.set_value
+            data: '{"entity_id": "{{trigger.payload_json.ent}}", "value": "{{trigger.payload_json.value}}"  }'
+
+# press
+      - conditions:   
+          - condition: trigger
+            id: button
+          - condition: template
+            value_template: "{{trigger.payload_json.op == 'press' }}"
+  
+        sequence:
+          - service: input_button.press
+            data: '{"entity_id": "{{trigger.payload_json.ent}}" }'
+
+
+mode: queued
+max: 10
+            
+            
+            
+            
+            
