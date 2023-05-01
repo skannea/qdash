@@ -1,2 +1,0 @@
-hej
-![xxx](./cat.png)
