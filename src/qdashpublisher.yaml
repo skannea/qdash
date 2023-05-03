@@ -112,6 +112,7 @@ action:
               payload_template: >-
                  {  "ent":"{{ trigger.payload_json.ent }}", 
                     "ix":"{{ trigger.payload_json.ix }}", 
+                    "key":"{{ trigger.payload_json.key }}", 
                     "uom": "{{ state_attr( trigger.payload_json.ent, 'unit_of_measurement' ) }}",
                     "icon":"{{ state_attr( trigger.payload_json.ent, 'icon' ) }}",
                     "scls":"{{ state_attr( trigger.payload_json.ent, 'state_class' ) }}",
@@ -144,6 +145,7 @@ action:
               payload_template: >-
                  {  "ent":"{{ trigger.payload_json.ent }}", 
                     "ix":"{{ trigger.payload_json.ix }}",
+                    "key":"{{ trigger.payload_json.key }}", 
                     "status":"not found" } 
 
 # mqtt button, but not allowed w_entity --> nothing 

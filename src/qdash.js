@@ -255,8 +255,8 @@ configBox: function ( data ){
               return;                                        // ==============>
           }
           if (data.status == 'not found') { 
-          //    qd.debug('Skip - entity not found: ' + ent ); 
-          //    return;                                        // ==============>
+              //qd.debug('Skip - entity not found: ' + ent ); 
+              //return;                                        // ==============>
           } 
           
           box = qd.box[data.ix]; //box config data to be used by update
