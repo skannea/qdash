@@ -1,359 +1,469 @@
 <!DOCTYPE html>
 <html>
-   <head>
-     <meta charset="utf-8"> 
-     <title>Qdash</title>
-     <link rel="icon" href="../qdashfavicon.ico" type="image/x-icon" />
-   
-     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" type="text/javascript"></script>
-     <script src="../qdash.js"      type = "text/javascript" ></script>  
-     <script src="../common.js"     type = "text/javascript" ></script>  
-     <script src="../mqtt.js"       type = "text/javascript" ></script>  
-     <script src="../storystore.js" type = "text/javascript" ></script>  
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@6.9.96/css/materialdesignicons.min.css">
-     <link rel="stylesheet" href="../qdash.css">
+  <head>
+    <meta charset="utf-8" />
+    <title>Qdash</title>
+    <link rel="icon" href="../qdashfavicon.ico" type="image/x-icon" />
 
-     <style>
-       h3     { color: blue;  font-size: 200%; }
-       p      { color: green; }
-       table, th, td {   border:1px solid black;padding:5px; }
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js"
+      type="text/javascript"
+    ></script>
+    <script src="../qdash.js" type="text/javascript"></script>
+    <script src="../common.js" type="text/javascript"></script>
+    <script src="../mqtt.js" type="text/javascript"></script>
+    <script src="../storystore.js" type="text/javascript"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@mdi/font@6.9.96/css/materialdesignicons.min.css"
+    />
+    <link rel="stylesheet" href="../qdash.css" />
 
-     </style>
+    <style>
+      h3 {
+        color: blue;
+        font-size: 200%;
+      }
+      p {
+        color: green;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid black;
+        padding: 5px;
+      }
+    </style>
 
-     
-    <script type = "text/javascript" > 
+    <script type="text/javascript">
+      // ---------------------------------------------
+      function log(s) {
+        console.log(s);
+        //document.getElementById("log").innerHTML += ('<br>'+s);
+      }
 
+      // ---------------------------------------------
+      function timelog(s) {
+        const d = new Date();
+        s = d.toLocaleTimeString() + ": " + s;
+        console.log(s);
+        //document.getElementById("log").innerHTML += ('<br>'+s);
+      }
 
-// --------------------------------------------- 
-function log( s ) {
-   console.log( s );
-   //document.getElementById("log").innerHTML += ('<br>'+s);
-}
+      // ---------------------------------------------
+      function statusline(s) {
+        document.getElementById("statusline").innerHTML = s;
+      }
 
-// --------------------------------------------- 
-function timelog( s ) {
-    const d = new Date();
-    s = d.toLocaleTimeString() + ': ' + s;
-    console.log( s );
-    //document.getElementById("log").innerHTML += ('<br>'+s);
-}
- 
-// --------------------------------------------- 
-function statusline( s ) {
-    document.getElementById("statusline").innerHTML = s;
-}     
+      // configurate when page is loaded
+      function start() {
+        var unique = Math.floor(Date.now() / 1000); // unique id in comunication with HA
+        var userpass = mqtt.getCreds("webreadwriter", "webbskrifvare"); // use provided MQTT credentials
+        //var  userpass = mqtt.getCreds('', '');                           // get MQTT credentials in anoter way
 
-// configurate when page is loaded
-function start() { 
-    var unique = Math.floor(Date.now() / 1000);   // unique id in comunication with HA
-    var  userpass = mqtt.getCreds('webreadwriter', 'webbskrifvare'); // use provided MQTT credentials  
-  //var  userpass = mqtt.getCreds('', '');                           // get MQTT credentials in anoter way  
-    
-    if (document.URL.startsWith('https')) mqtt.config = 
-       {
-       userName :         userpass.user, 
-       password :         userpass.pass,
-       source :           userpass.source, 
-       host :             'mqtt.skannea.duckdns.org',
-       port :             443,
-       useSSL :           true,
-       client :           'qdashremote_'+ unique,
-       timeout :          2000,  // ms
-       debug: log,
-       log: timelog
-       };
-    else  mqtt.config = 
-       {
-       userName :         userpass.user, 
-       password :         userpass.pass,
-       source :           userpass.source, 
-       host :             '192.168.0.111',
-       port :             1884,
-       useSSL :           false, 
-       client :           'qdashlocal_'+ unique,
-       timeout :          2000,  // ms
-       debug: log,
-       log: timelog
-       };      
+        if (document.URL.startsWith("https"))
+          mqtt.config = {
+            userName: userpass.user,
+            password: userpass.pass,
+            source: userpass.source,
+            host: "mqtt.skannea.duckdns.org",
+            port: 443,
+            useSSL: true,
+            client: "qdashremote_" + unique,
+            timeout: 2000, // ms
+            debug: log,
+            log: timelog,
+          };
+        else
+          mqtt.config = {
+            userName: userpass.user,
+            password: userpass.pass,
+            source: userpass.source,
+            host: "192.168.0.111",
+            port: 1884,
+            useSSL: false,
+            client: "qdashlocal_" + unique,
+            timeout: 2000, // ms
+            debug: log,
+            log: timelog,
+          };
 
-    mqtt.config.birthTopic =    'fromweb/clientup';     
-    mqtt.config.lastwillTopic = 'fromweb/clientdown';     
+        mqtt.config.birthTopic = "fromweb/clientup";
+        mqtt.config.lastwillTopic = "fromweb/clientdown";
 
+        mqtt.config.onSuccess =
+          // ----------------------------------
+          function () {
+            statusline("MQTT connection");
+            qd.onSuccess();
+            //mqtt.subscribe( 'toweb/storysave/mylog' ); //§§
+            //mqtt.subscribe( 'toweb/storysave/someother' ); //§§
+          };
 
-    mqtt.config.onSuccess = 
-      // ----------------------------------
-      function( ) {
-        statusline('MQTT connection');
-        qd.onSuccess();
-        //mqtt.subscribe( 'toweb/storysave/mylog' ); //§§
-        //mqtt.subscribe( 'toweb/storysave/someother' ); //§§
-      };
-     
-    mqtt.config.onMessage = 
-      // ----------------------------------
-      function ( topic, data ){ 
-        qd.onMessage( topic, data );
-        console.log(data); 
-        myLogging( topic, data ); //§§ 
-      } 
-      
-    mqtt.config.onFailure = 
-      // ----------------------------------
-      function ( err ){
-        statusline('MQTT connection failed: ' + err );
-      } 
-      
-    
-    qd.config = 
-    {
-       stateTopic :       'toweb/qdash/state',     // HA --> this app
-       buttonTopic :      'fromweb/qdash/button',  // this app --> HA
-       requestTopic :     'fromweb/qdash/request', // this app --> HA 
-       responseTopic :    'toweb/qdash/response',  // HA --> this app
-       key :               unique,
-       //columns :          qd.getUrlParam('columns', '2' ),
-       //width :            qd.getUrlParam('width', '100' ), // % of view width
-       //debug: log,
-       log: timelog
-       
-    };
-    
-    qd.config.domainIcon = {
-        light  :        'lightbulb',    
-        switch :        'circle', 
-        script :        'cog',        
-        binary_sensor : 'circle',    
-        sensor:         'eye'
-    };         
+        mqtt.config.onMessage =
+          // ----------------------------------
+          function (topic, data) {
+            qd.onMessage(topic, data);
+            console.log(data);
+            myLogging(topic, data); //§§
+          };
 
-    qd.config.deviceIcon = {
-        temperature  :  'thermometer',    
-        humidity :      'water-percent',    
-        door :          'door'
-    };        
-     
-    qd.config.onUpdateBox = myBoxUpdate;
-    qd.config.onConfigBox = myConfig;
-    
-    //§§
-    qd.config.defaultonoffcolor = "on:gold,off:grey,*:red";
+        mqtt.config.onFailure =
+          // ----------------------------------
+          function (err) {
+            statusline("MQTT connection failed: " + err);
+          };
 
-    qd.config.color = {
-       whiteblue : "on:white,off:blue,*:red",
-       whiteblack : "on:white,off:black,*:red"
-    } ;
-    
-    qd.config.dict = 
-    { neoboxcommands:"x red:Röd-X,x blue:Blå-X,x gold:Gul-X,z red:Röd-Z,z blue:Blå-Z,z gold:Gul-Z" };
-    
-    // initiate page 
-    qd.begin(); 
-    // start connection attempts
-    mqtt.begin();
-    // when connected --> onSuccess
-    // when message   --> onMessage   
-    // when failure   --> onFailure + new connection attempt    
-}
+        qd.config = {
+          stateTopic: "toweb/qdash/state", // HA --> this app
+          buttonTopic: "fromweb/qdash/button", // this app --> HA
+          requestTopic: "fromweb/qdash/request", // this app --> HA
+          responseTopic: "toweb/qdash/response", // HA --> this app
+          key: unique,
+          //columns :          qd.getUrlParam('columns', '2' ),
+          //width :            qd.getUrlParam('width', '100' ), // % of view width
+          //debug: log,
+          log: timelog,
+        };
 
-// -----------------------------------
-function myConfig( data ) {
-   if ( data.arid  == 'labb' )       data.fill = 'purple';
-   if ( data.arid  == 'vardagsrum' ) data.fill = 'navy';
+        qd.config.domainIcon = {
+          light: "lightbulb",
+          switch: "circle",
+          script: "cog",
+          binary_sensor: "circle",
+          sensor: "eye",
+        };
 
-   // rule: set number of decimals (prec) depending on device_class
-   if ( data.dcls  == 'temperature' ) data.prec = '1';
-   if ( data.dcls  == 'humidity' )    data.prec = '0';
-   if ( data.dcls  == 'voltage' )     data.prec = '2';
+        qd.config.deviceIcon = {
+          temperature: "thermometer",
+          humidity: "water-percent",
+          door: "door",
+        };
 
-}
-// -----------------------------------
-function myUpdate( data ) {
+        qd.config.onUpdateBox = myBoxUpdate;
+        qd.config.onConfigBox = myConfig;
 
-   if (data.trig == 'init' ) return; 
+        //§§
+        qd.config.defaultonoffcolor = "on:gold,off:grey,*:red";
 
-   if (data.ent == 'input_text.cat_state') {
-   //   if (data.state == 'two')   qd.showSection( 'downstairs' );
-   //   if (data.state == 'three') qd.showSection( 'upstairs' );
-   }
-   if (data.ent == 'input_number.testwide') {
-      var v = com.round( data.state, '0' );      
-      //if (v == '2')   qd.showSection( 'downstairs' );
-      //if (v == '4')   qd.showSection( 'upstairs' );
-   } 
-    
-}
+        qd.config.color = {
+          whiteblue: "on:white,off:blue,*:red",
+          whiteblack: "on:white,off:black,*:red",
+        };
 
-function myBoxUpdate( data ) {
-     // in HTML code there is a <div class="nobox"><p id="messageline"></p></div>
-        if ( data.ent  == 'input_text.cat_state' )  {
-           document.getElementById( 'catline' ).innerHTML = 'Important: ' + data.state;
+        qd.config.dict = {
+          neoboxcommands:
+            "x red:Röd-X,x blue:Blå-X,x gold:Gul-X,z red:Röd-Z,z blue:Blå-Z,z gold:Gul-Z",
+        };
+
+        // initiate page
+        qd.begin();
+        // start connection attempts
+        mqtt.begin();
+        // when connected --> onSuccess
+        // when message   --> onMessage
+        // when failure   --> onFailure + new connection attempt
+      }
+
+      // -----------------------------------
+      function myConfig(data) {
+        if (data.arid == "labb") data.fill = "purple";
+        if (data.arid == "vardagsrum") data.fill = "navy";
+
+        // rule: set number of decimals (prec) depending on device_class
+        if (data.dcls == "temperature") data.prec = "1";
+        if (data.dcls == "humidity") data.prec = "0";
+        if (data.dcls == "voltage") data.prec = "2";
+      }
+      // -----------------------------------
+      function myUpdate(data) {
+        if (data.trig == "init") return;
+
+        if (data.ent == "input_text.cat_state") {
+          //   if (data.state == 'two')   qd.showSection( 'downstairs' );
+          //   if (data.state == 'three') qd.showSection( 'upstairs' );
         }
-        if ( data.ent  == 'event.print' )  {
-           document.getElementById( 'catline' ).innerHTML = 'Print: ' + data.state;
+        if (data.ent == "input_number.testwide") {
+          var v = com.round(data.state, "0");
+          //if (v == '2')   qd.showSection( 'downstairs' );
+          //if (v == '4')   qd.showSection( 'upstairs' );
         }
+      }
 
-        
-    }     
+      function myBoxUpdate(data) {
+        // in HTML code there is a <div class="nobox"><p id="messageline"></p></div>
+        if (data.ent == "input_text.cat_state") {
+          document.getElementById("catline").innerHTML =
+            "Important: " + data.state;
+        }
+        if (data.ent == "event.print") {
+          document.getElementById("catline").innerHTML = "Print: " + data.state;
+        }
+      }
 
+      function myLogging(topic, data) {
+        if (topic != "toweb/storysave/mylog") return;
 
-function myLogging( topic, data ) {
-        
-        if (topic != 'toweb/storysave/mylog') return;
-
-        var lines = story.loglines( data, 'input_text.mylog' );
-       // format is timestamp:INFO:state:entity_id
+        var lines = story.loglines(data, "input_text.mylog");
+        // format is timestamp:INFO:state:entity_id
         if (lines) {
-          var html = '<table>';
-          for ( var n=0; n<lines; n++ ) {  
-             html += `<tr>
+          var html = "<table>";
+          for (var n = 0; n < lines; n++) {
+            html += `<tr>
                        <td style="color:blue">${story.hms(n)}</td>
                        <td style="color:red">${story.array(n)[2]}</td>
                        <td style="color:white">${story.array(n)[3]}</td>
-                      </tr>`; 
+                      </tr>`;
           }
-           html += '</table>';
-          document.getElementById( 'multistory' ).innerHTML = html;
+          html += "</table>";
+          document.getElementById("multistory").innerHTML = html;
         }
- 
-        
-       }     
+      }
+    </script>
+  </head>
 
-
-     </script>    
-   </head>
-
-
-<body onLoad="start()"> 
-  
-     
-
-   <div class="nobox">
+  <body onLoad="start()">
+    <div class="nobox">
       <h1>Qdash</h1>
-      <p>Functional Tests</p> 
-   </div>   
- <div section  fill="darkgrey" columns="6">      
-   <div class="nobox halfsize" id="multistory">
-   </div>   
-   <div class="nobox halfsize" id="story">
-   </div>   
-</div>   
-  
-   <div section="navigate" fill="gold" show columns="8">  
-       <div view="first:first,second,third"  name="Första" icon="cog" look="color:green"></div>
-       <div view="second:first,second,third" name="Andra" icon="cog" fill="blue"></div>
-       <div view="third:first,second,third"  name="Tredje" icon="cog" ></div>
-       <div empty ></div>
-       <div view="upstairs:upstairs,downstairs"  name="Uppe" icon="circle"></div>
-       <div view="downstairs:upstairs,downstairs"  name="Nere" icon="square"></div>
-       <div empty></div>
-       <div empty></div>
-   </div>
-  
-    <div section="first"  show fill="black" columns="10">   
-      <div entity="sensor.eta_temperature"            name="Vardagsrummet" ></div>
-      <div entity="sensor.vicker_room_temperature"                         ></div>
-      <div entity="binary_sensor.kontrollbox_knapp1"  name="Blå"   fill="#22AACC"     ></div>
-      <div entity="binary_sensor.kontrollbox_knapp1"  name="Lila"  fill="purple"     ></div>
+      <p>Functional Tests</p>
+    </div>
+    <div section fill="darkgrey" columns="6">
+      <div class="nobox halfsize" id="multistory"></div>
+      <div class="nobox halfsize" id="story"></div>
     </div>
 
-    <div section="second" fill="black" columns="10">   
-      <div entity="light.ikea_psi" bright  ></div>
-      <div entity="script.ikea_psi_up" ></div>
-      <div entity="script.ikea_psi_down" ></div>      
-      <div entity="input_number.led_level" prec="1" uom="u" ></div>
-      <div entity="input_number.led_level" prec=
-      "1"  uom="w" show color="0.0:grey,0.1:white,0.3:yellow,0.5:green,0.7:blue,1.0:red" ></div>
-    </div>  
-
-    <div section="third" fill="black" columns="10">   
-      <div entity="input_number.testwide" prec="0"  ></div>
-      <div entity="input_number.testwide" name="number:lookup" prec="0" show dict="0:zero,1:one,2:two,*:error"></div>
-
-      <div entity="input_number.testwide" name="number:color" show icon="dog" color="0:black,1:brown,2:grey"></div>
-      <div entity="input_number.testwide" name="number:set" set="2" prec="0" icon="home"></div>
+    <div section="navigate" fill="gold" show columns="8">
+      <div
+        view="first:first,second,third"
+        name="Första"
+        icon="cog"
+        look="color:green"
+      ></div>
+      <div
+        view="second:first,second,third"
+        name="Andra"
+        icon="cog"
+        fill="blue"
+      ></div>
+      <div view="third:first,second,third" name="Tredje" icon="cog"></div>
+      <div empty></div>
+      <div view="upstairs:upstairs,downstairs" name="Uppe" icon="circle"></div>
+      <div
+        view="downstairs:upstairs,downstairs"
+        name="Nere"
+        icon="square"
+      ></div>
+      <div empty></div>
+      <div empty></div>
     </div>
 
-    <div section="upstairs" fill="green" show columns="8">  
+    <div section="first" show fill="black" columns="10">
+      <div entity="sensor.eta_temperature" name="Vardagsrummet"></div>
+      <div entity="sensor.vicker_room_temperature"></div>
+      <div
+        entity="binary_sensor.kontrollbox_knapp1"
+        name="Blå"
+        fill="#22AACC"
+      ></div>
+      <div
+        entity="binary_sensor.kontrollbox_knapp1"
+        name="Lila"
+        fill="purple"
+      ></div>
+    </div>
+
+    <div section="second" fill="black" columns="10">
+      <div entity="light.ikea_psi" bright></div>
+      <div entity="script.ikea_psi_up"></div>
+      <div entity="script.ikea_psi_down"></div>
+      <div entity="input_number.led_level" prec="1" uom="u"></div>
+      <div
+        entity="input_number.led_level"
+        prec="1"
+        uom="w"
+        show
+        color="0.0:grey,0.1:white,0.3:yellow,0.5:green,0.7:blue,1.0:red"
+      ></div>
+    </div>
+
+    <div section="third" fill="black" columns="10">
+      <div entity="input_number.testwide" prec="0"></div>
+      <div
+        entity="input_number.testwide"
+        name="number:lookup"
+        prec="0"
+        show
+        dict="0:zero,1:one,2:two,*:error"
+      ></div>
+
+      <div
+        entity="input_number.testwide"
+        name="number:color"
+        show
+        icon="dog"
+        color="0:black,1:brown,2:grey"
+      ></div>
+      <div
+        entity="input_number.testwide"
+        name="number:set"
+        set="2"
+        prec="0"
+        icon="home"
+      ></div>
+    </div>
+
+    <div section="upstairs" fill="green" show columns="8">
       <div class="nobox">Upstairs</div>
-      <div entity="input_text.cat_state" name="text:list"  list="one,two,three,Fyra,Fem" look="color:red;" ></div>
-      <div entity="input_text.cat_state" name="text:dict"   look="color:red;font-size:30%;" show dict="one:Ett,two:Två,three:Tre,four:Fyra,five:Fem,*:fel" ></div>
-      <div entity="input_text.cat_state" name="text:color"  show color="one:red,two:orange,three:yellow,four:green,five:blue" ></div>
-      <div entity="input_text.cat_state" name="text:enter"  ></div>
-      <div 
-        entity="input_text.cat_state" 
-        name="text:set2" 
-        set="two" 
-        color="@whiteblue" >
-      </div>
+      <div
+        entity="input_text.cat_state"
+        name="text:list"
+        list="one,two,three,Fyra,Fem"
+        look="color:red;"
+      ></div>
+      <div
+        entity="input_text.cat_state"
+        name="text:dict"
+        look="color:red;font-size:30%;"
+        show
+        dict="one:Ett,two:Två,three:Tre,four:Fyra,five:Fem,*:fel"
+      ></div>
+      <div
+        entity="input_text.cat_state"
+        name="text:color"
+        show
+        color="one:red,two:orange,three:yellow,four:green,five:blue"
+      ></div>
+      <div entity="input_text.cat_state" name="text:enter"></div>
+      <div
+        entity="input_text.cat_state"
+        name="text:set2"
+        set="two"
+        color="@whiteblue"
+      ></div>
 
-      <div entity="input_text.cat_state" name="text:set3" set="three" look="color:red;font-size:50%;" ></div>
-      <div entity="input_text.cat_state" name=" " show look="color:red;font-size:150%;" dict="one:Ett,two:Två,three:Tre,four:Fyra,five:Fem"   ></div>
+      <div
+        entity="input_text.cat_state"
+        name="text:set3"
+        set="three"
+        look="color:red;font-size:50%;"
+      ></div>
+      <div
+        entity="input_text.cat_state"
+        name=" "
+        show
+        look="color:red;font-size:150%;"
+        dict="one:Ett,two:Två,three:Tre,four:Fyra,five:Fem"
+      ></div>
       <!--div entity="input_text.testtext" list="one,two,three,four,five" ></div>
       <div entity="input_text.testtext" look="enter" ></div>
       <div entity="input_select.namn" look="show"></div-->
-      <div entity="input_select.rum" name="select:list" list="Labbet,Nere,Två,Tre,Fyra,Fem" ></div>
-      <div entity="input_select.rum" name="select:dict" dict="Labbet:Man cave,Nere:Downstairs,three:Tre,four:Fyra,five:Fem" look="color:red;font-size:20%;" ></div>
-      <div entity="input_select.rum" name="select:show" show look="color:red;font-size:20%;" ></div>
-      <div entity="input_select.rum" name="select:set" set='Nere'  ></div>
-      <div entity="input_datetime.hhmm" look="font-size:80%;" ></div>    
-      <div entity="input_datetime.ymd" date ></div>    
-      <div entity="input_datetime.hhmm" show  look="font-size:80%;"  ></div>    
-      <div entity="input_datetime.ymd" show ></div>    
-      <div empty="" fill="blue" name="Lite text" look="font-size:70%;"   >Mera text</div>
-      <div empty="" fill="grey" name="Lite text" ><span style="color:green;font-size:70%;" >Text</span></div>
-      <div entity="script.qdtest" name="NeoBox"  dict='@neoboxcommands' ></div>      
-      <div entity="script.qdtest" dict='y red:Röd,y green:Grön,y blue:Blå,y gold:Gul' ></div>      
-      <div entity="script.qdtest" name="red"  icon="circle" set="y red" ></div>      
-  
-     
-  </div>
- 
-   <div section="downstairs" fill="black" columns="8">  
+      <div
+        entity="input_select.rum"
+        name="select:list"
+        list="Labbet,Nere,Två,Tre,Fyra,Fem"
+      ></div>
+      <div
+        entity="input_select.rum"
+        name="select:dict"
+        dict="Labbet:Man cave,Nere:Downstairs,three:Tre,four:Fyra,five:Fem"
+        look="color:red;font-size:20%;"
+      ></div>
+      <div
+        entity="input_select.rum"
+        name="select:show"
+        show
+        look="color:red;font-size:20%;"
+      ></div>
+      <div entity="input_select.rum" name="select:set" set="Nere"></div>
+      <div entity="input_datetime.hhmm" look="font-size:80%;"></div>
+      <div entity="input_datetime.ymd" date></div>
+      <div entity="input_datetime.hhmm" show look="font-size:80%;"></div>
+      <div entity="input_datetime.ymd" show></div>
+      <div empty="" fill="blue" name="Lite text" look="font-size:70%;">
+        Mera text
+      </div>
+      <div empty="" fill="grey" name="Lite text">
+        <span style="color: green; font-size: 70%">Text</span>
+      </div>
+      <div entity="script.qdtest" name="NeoBox" dict="@neoboxcommands"></div>
+      <div
+        entity="script.qdtest"
+        dict="y red:Röd,y green:Grön,y blue:Blå,y gold:Gul"
+      ></div>
+      <div entity="script.qdtest" name="red" icon="circle" set="y red"></div>
+    </div>
+
+    <div section="downstairs" fill="black" columns="8">
       <div class="nobox">Downstairs</div>
 
-      <div entity="switch.element_labbet" name="Värme" color="on:white,off:black,other:red"        ></div>
+      <div
+        entity="switch.element_labbet"
+        name="Värme"
+        color="on:white,off:black,other:red"
+      ></div>
 
-      <div entity="light.nexa_b"                                          ></div>
+      <div entity="light.nexa_b"></div>
       <div empty></div>
-      <div entity="light.neobox_x" fill="green" color="on:white,off:black,bad:red" ></div>
+      <div
+        entity="light.neobox_x"
+        fill="green"
+        color="on:white,off:black,bad:red"
+      ></div>
       <div entity="light.neobox_y" bright fill="fuchsia" icon="lamp"></div>
-      <div entity="light.neobox_z" color="@whiteblue" fill="gray"  ></div>
-      <div entity="light.neobox_x" bright ></div>
+      <div entity="light.neobox_z" color="@whiteblue" fill="gray"></div>
+      <div entity="light.neobox_x" bright></div>
       <div entity="light.neobox_y" icon="lamp"></div>
-      <div entity="light.neobox_z" ></div>
-      <div entity="sensor.garagebox_elmatare"                             ></div>
-      <div entity="sensor.garagebox_elmatare" color="600:green,3000:yellow,4000:orange,20000:red"               ></div>
-      <div custom fill="grey"  >
-        <p style="color:blue;">Upstairs</p>
-        <span class="mdi mdi-home" onclick="qd.showSection( 'upstairs:upstairs,downstairs' )"></span>
-      </div>  
-      <div entity="input_button.downstairs" ></div>
-      <div entity="input_number.testwide" name="number:set" set="4" prec="0" icon="home"></div>
-       <div empty></div>
+      <div entity="light.neobox_z"></div>
+      <div entity="sensor.garagebox_elmatare"></div>
+      <div
+        entity="sensor.garagebox_elmatare"
+        color="600:green,3000:yellow,4000:orange,20000:red"
+      ></div>
+      <div custom fill="grey">
+        <p style="color: blue">Upstairs</p>
+        <span
+          class="mdi mdi-home"
+          onclick="qd.showSection( 'upstairs:upstairs,downstairs' )"
+        ></span>
+      </div>
+      <div entity="input_button.downstairs"></div>
+      <div
+        entity="input_number.testwide"
+        name="number:set"
+        set="4"
+        prec="0"
+        icon="home"
+      ></div>
+      <div empty></div>
       <div entity="light.neobox_z" name="Z on" set="on"></div>
       <div entity="light.neobox_z" name="Z off" set="off"></div>
-       <div entity="input_text.history" show name="History" ></div>
-   </div>
-   
-   <div class="nobox">
-       <!--h1>h1 Guest dashboard</h2>
+      <div entity="input_text.history" show name="History"></div>
+    </div>
+
+    <div class="nobox">
+      <!--h1>h1 Guest dashboard</h2>
        <h2>h2 Guest dashboard</h2>
        <h3>h3 Guest dashboard</h2>
        <p>p Welcome to control my home. Use the buttons below to switch between views.</p-->
-       <button onclick="qd.showSection('upstairs:upstairs,downstairs'  )">Upstairs</button> 
-       <button onclick="qd.showSection('downstairs:upstairs,downstairs'  )">Downstairs</button> 
-       <button onclick="qd.showSection('first:first,second,third'  )">First</button> 
-       <button onclick="qd.showSection('second:first,second,third'  )">Second</button> 
-       <button onclick="qd.showSection('third:first,second,third'  )">Third</button> 
-     </div>
+      <button onclick="qd.showSection('upstairs:upstairs,downstairs'  )">
+        Upstairs
+      </button>
+      <button onclick="qd.showSection('downstairs:upstairs,downstairs'  )">
+        Downstairs
+      </button>
+      <button onclick="qd.showSection('first:first,second,third'  )">
+        First
+      </button>
+      <button onclick="qd.showSection('second:first,second,third'  )">
+        Second
+      </button>
+      <button onclick="qd.showSection('third:first,second,third'  )">
+        Third
+      </button>
+    </div>
     <div class="nobox"><p id="catline"></p></div>
 
     <div class="smallsize" id="statusline">Progress status line</div>
-    <div style="font-size:10%;color:black;" id="log"></div>
-    
-
-</body>
- 
+    <div style="font-size: 10%; color: black" id="log"></div>
+  </body>
 </html>
-
-     
