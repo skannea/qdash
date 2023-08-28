@@ -479,121 +479,200 @@ Examples:
 
     
     
- # Security
+  # Security and access control
+
+## Recommended installation and set-up
+
+A standard HA installation is used:
+ - HA OS is installed
+ - HA's ip address is known (eg. 192.168.0.111)
+ - HA web server uses standard port 8123 
+ - web pages are put under *config/www/qdash* and accessed with */local/qdash* (eg. 192.168.0.111:8123/local/qdash/apps/myapp.html)
+ - Mosquitto add-on (MQTT broker) is installed
+ - Duck DNS add-on is installed
+ - Nginx Proxy Manager add-on (**NPM**) is installed
  
- - HTTPS is used 
- - Nginx is set up to limit access to other pages 
- - Nginx user/password is required to get page
- - MQTT broker is accessed via Nginx using Web Sockets Secure
- - MQTT user/password is required 
- - MQTT access control list is used to restrict allowed topics 
- - Automation restricts the set of entities to be accessed
+## Set up your router to forward ports 443 and 80 to NPM
 
-## Discussion on access credentials 
-There are two types of access credentials involved:
-- **page access** - username and password required to get access to the web pages. The page access control is implemented in Nginx.
-- **MQTT access* - username and password (**app MQTT user/pass**) required to send and receive MQTT messages of specific topics. The MQTT access control is implemented in the MQTT broker.
+NPM add-on is a server with the same ip as HA but it listens on port 443 (HTTPS) and port 80 (required for certificate handling).
 
-An **app target page** is a static page and the ordinary HA web server is used to host the page. That leads to a trade-off has to be made between safe password handling, a simple access administration and a good user experience. There are multiple ways to go:
+Router port forwarding functionality is often found under *virtual servers*.
+- External port 443 shall be routed to 192.168.0.111:443 
+- External port  80 shall be routed to 192.168.0.111:80 
 
-### MQTT user/pass in the page code
-In this case the page itself should not be accessable without a user login.
-The page shall be put in a protected folder and Nginx shall be set up to ask the user for username and password. See xxx.  
-While the browser's ability to remember a site's username and password can be used, this method is easy for the user.
-To enable and disable users the admin changes the Nginx access list.    
-It is however easy for a wicked user (with access) to inspect the code and steal the MQTT credentials. Without having access to the page these may be used to control entities the same way as the page. To avoid it, the admin also has to change the MQTT credentials (see xx) as well as the page code. 
-On the other hand, if the user is trusted this should not be a problem at all.
+## Get a DuckDNS domain
 
-### MQTT credentials as URL request parameters
-The MQTT credentials are the access key to HA, so in this case the page itself may be accessable without a user login.   
-The use of HTTPS protects the URL request parameters. With a browser bookmark including the MQTT credentials, this method is very simple to use.
-A wicked user can easily steal the MQTT credentials but on the other hand the admin only have to add and delete the MQTT credentials to enable and disable access.
-A drawback is also that when the page is shown in a normal browser, the address field will show also the credentials. For this reason, an option is provided for removing the requst parameters as well as the history.
+At *duckdns.org* you can register a Duck DNS domain ( eg. myduckname.duckdns.org ).  
 
-### MQTT credentials as user input fields
-If the user manually enters the MQTT credentials each time, there are no trace of them anywhere. However, if the browser don't remember them, this is cumbersome for the user. 
+Configure Duck DNS add-on with your domain. Now the add-on will tell duckdns.org the internet ip of your router. 
 
-### MQTT credentials as autofill password fields
-To make a browser remember a username and a password for a site, a HTML form has to be used, and a successful HTTP POST or GET has to be performed. There is a method provided for this:
-When invoking the Qdash page, a form with input fields for MQTT credentials is showed. If there is a username and password stored in the browser, it should automatically be filled in and the user just clicks a login button to continue. If the user enters a new username and password, another button is clicked. In order to make the browser store the credentials, another page has to be opened. For Qdash this is qdashlogin.html which does nothing except waits for a button click to go back to the original Qdash page. Now the credentials should be stored and a normal login can be made.
-However, tests have shown that all browser do not behave the same. This is the biggest problem with this solution.
+All traffic to your Duck DNS domain will be forwarded to your router. 
 
-# The app concepts
+If the internet ip changes, the add-on will update duckdns.org.
+
+In addition to your Duck DNS domain, like myduckname.duckdns.org, addresses like alpha.myduckname.duckdns.org, beta.myduckname.duckdns.org and mqtt.myduckname.duckdns will be forwarded to your router. Such addresses may be used in your NPM configuration.
+
+## Set up NPM proxy hosts 
+ 
+### Host 1 - HTTPS access to HA user interface and web server
+
+An address like https://ha.myduckname.duckdns.org is used to access HA. For web pages located at config/www addresses like https://ha.myduckname.duckdns.org/local/mypage.html are used.
+ 
+ - Details
+   -  Domain Names: ha.myduckname.duckdns.org
+   -  Scheme: http 
+   -  Forward IP: 192.168.0.111
+   -  Forward Port: 8123
+   -  Websockets Support: on
+   -  Access List: Publically Avaiable (*but access control is handled by HA*)
+  - SSL
+    - SSL Certificate: (*request a new SSL certificate, will result in ha.myduckname.duckdns.org*)
+    - Force SSL: on
+
+### Host 2 - Secure Websocket access to MQTT broker 
+
+An address like wss://mqtt.myduckname.duckdns.org:443 is used.
+
+Note that the standard port 8884 is not used. To use port 8884, the router has to forward it to port 443.  
+ 
+ - Details
+   -  Domain Names: mqtt.myduckname.duckdns.org
+   -  Scheme: http 
+   -  Forward IP: 192.168.0.111
+   -  Forward Port: 1884 (*Websocket port*)
+   -  Websockets Support: on
+   -  Access List: Publically Avaiable (*but access control is handled by MQTT broker*)
+ 
+ - SSL
+   - SSL Certificate: request a new SSL certificate, will result in mqtt.myduckname.duckdns.org
+   - Force SSL: on
+
+This set-up will work for Qdash if MQTT password is entered by the user or provided in the URL. 
+
+In such case the application is accessed like https://ha.myduckname.duckdns.org/local/qdash/apps/myapp.html 
+
+If you want to explicitly include MQTT credentials in the code, also access to the application must be restricted. To achieve this and still have unrestricted access to custom web pages under /config/www like https://ha.myduckname.duckdns.org/local/somepage.html, you have to add another proxy host and use some tricks:  
+
+### Host 3 - for HTTPS access to Qdash application
+
+ using https://qd.myduckname.duckdns.org/qdash/apps/myapp.html
+
+- Details
+   - Domain Names: qd.myduckname.duckdns.org
+   - Scheme: http 
+   - Forward IP: 192.168.0.111
+   - Forward Port: 8124 (*trick - an illegal port, access attempts result in code 502*)
+   - Websockets Support: on
+   - Access List: myuserlist (*you have to add a NPM user/password list for this*)
+ - Custom locations
+   - (*forward addresses like qd.myduckname.duckdns.org/qdash/apps/myapp.html*)
+   - Define location: /qdash/apps (*location for your apps*)
+   - Scheme: http 
+   - Forward IP: 192.168.0.111/local/qdash/apps
+   - Forward Port: 8123  
+- SSL
+   - SSL Certificate: (*request a new SSL certificate, will result in qd.myduckname.duckdns.org*)
+   - Force SSL: on
+
+### Host 1 modification - block all access to ha.myduckname.duckdns.org/local/qdash/apps
+- Custom locations: 
+  - Define location: /local/qdash/apps *location for your apps*
+  - Scheme: http 
+  - Forward IP: 192.168.0.111
+  - Forward Port: 8124  (*trick - an illegal port, access attempts result in code 404*)
+
+The recommendation is to complete all steps.
+
+If you want to have unrestricted access to pages under config/www/qdash you can change Access list no Publicly Accessible.
+
+## Configure MQTT
+
+Access to MQTT should be restricted. This is done by setting up a set of username/password pairs. Under *Login*, for example:
+
+    - username: "ha"
+      password: "e34fG239"
+    - username: "qdash01"
+      password: "zx47567hq"
+
+You can also restrict allowed topics for each username/password pair:
+Enable this option under *Customize*
+
+    active: true
+    folder: mosquitto
+
+Create a file */share/mosquitto/acl.conf* with content: 
+
+    acl_file /share/mosquitto/accesscontrollist
+    sys_interval 10
+
+
+Create a file */share/mosquitto/accesscontrollist* with content like:
+
+    # HA - access to any topic
+    user ha
+    topic readwrite #
+
+    # Qdash - access to Qdash topics
+    user qdash01
+    topic readwrite fromweb/#
+    topic readwrite toweb/#
+
+Under *Network*, configure your MQTT broker to listen for *MQTT over Websockets* on the standard port *1884*. 
+
+## Access restrictions 
+There are two possible types of access restrictions:
+- for page access, where username and password entered by the user give access to the web pages. The page access control is implemented in NPM.
+- for MQTT access, where username and password give the right to send and/or receive MQTT messages of specific topics. The MQTT access control is implemented in the MQTT broker.
+
+A Qdash application is basically a static page that is hosed by the ordinary HA web server. The page itself contains and refers to HTML code, Javascript code and CSS code. 
+
+In order to connect to the MQTT broker, the MQTT username and password have to be known to the Javascript code. 
+
+In Qdash there is support for providing username and/or password in three ways:
+
+1. they are entered by the user when starting the application
+2. they are provided as URL arguments
+3. they are defined in the page code
+
+A function provides the functionality:
+
+`mqtt.getUsernamePassword( username, password )` 
+
+- username - a username or an empty string
+- password - a password or an empty string
+
+The function returns an object with members username and password, or empty strings if not provided.
+
+- If argument *username* is provided, it will be returned. 
+- Else, if URL argument *username* is provided, it will be returned.
+- Else, the user will be prompted for the username, and it will be returned.
+
+- If argument *password* is provided, it will be returned. 
+- Else, if URL argument *password* is provided, it will be returned.
+- Else, the user will be prompted for the username, and it will be returned.
+
+Examples:
+
+    var s;
+    // result is in s.username and s.password
+    s = mqtt.getUsernamePassword( "qdash01", "zx47567hq" );
+    s = mqtt.getUsernamePassword( "qdash01", "" );
+    s = mqtt.getUsernamePassword( "", "" );
+
+## Multiple applications with different access restrictions
+
+It is possible to have applications where only certain users have access. 
+However, to be secure, the different users should have dedicated automations and MQTT topics.
+
+An example:
+User A - can control bedroom lights.
+User B - can control all lights.
+
+One automation (with defind MQTT topics) handles all lights. 
+A's application only controls bedroom lights.
+B's application controls all lights.
+However, suppose A is evil. If A knows the entity ids of other lights, it is possible to control them using a MQTT tool. This is because A's and B's applications uses the same MQTT topics.
+
+To avoid this, they should have separated automations with different MQTT topics.
+
     
-An **app** consists of:
-- one **app target page**, which is a html page for the Qdash boxes 
-- one or more **app automations** to exchange MQTT messages with the **app target page**
-- optionally, one or more **app entry pages**, to assign **app MQTT user/pass** and load the **app target page**
-
-MQTT characteristics of an **app**:
-- it uses a set of **app MQTT topics** when sending to HA, for example *fromapp/app01/#*
-- it uses a set of **app MQTT topics** when receiving from HA, for example *toapp/app01/#*
-- it uses a specific **app MQTT user/pass** pair, for example *app01* and *zygr78p*
-- **app MQTT topics** are assigned in the **app target page**
-- **app MQTT topics** are assigned in the **app automations**
-- **app MQTT user/pass** is linked to the **app MQTT topics** in the MQTT broker configuration
-
-# Providing the app MQTT user/pass 
-
-The **app MQTT user/pass** may be provided to the **app** in alternative ways:
-- directly in the code of the **app target page** - **CODE**
-- as URL request parameters *mqttuser* and *mqttpass* - **URL**
-- using an **app entry page** that uses the browser *sessionStorage* - **STORE**
-- prompting the user for input each time the **app** is started - **PROMPT**
-- using the browser password manager - **AUTH**
-    
-# Nginx for security
-    
-Nginx Proxy Manager add-on (**NPM**) is used for secure communication over internet:
-- **https** for web pages
-- **wss** for MQTT
-When required, NPM is also controlling page access by specifying access lists. An access list contains username and password pairs and is assigned a specific sub domain, like *iron.myduckname.duckdns.org*.
-
-## DDNS   
-    
-For pages, a **base domain** is set up under *duckdns.org*, for example *myduckname.duckdns.org*.
-It is maintained by the HA add-on *Duck DNS* to always point to the current HA internet ip address.
-All traffic to the base domain and its subdomains, like *iron.myduckname.duckdns.org*, are redirected by *duckdns.org* service. 
-
-## Routing 
-    
-- The router connecting the local network to the internet is set up to forward https port 443 to NPM.
-- NPM forwards data to and from the HA web server locally accessed at HA's address and port, for example http://192.168.0.111:8123. 
-- NPM is configured so specific locations of a sub domain are translated into locations managed by the HA web server. For example, *https://iron.myduckname.duckdns.org/qdash* could be translated to *http://192.168.0.111:8123/local/qdash*.
-- NPM also translates MQTT traffic. For example *wss://mqtt.myduckname.duckdns.org:8884* could be translated to *ws://192.168.0.111:1884*.
-
-    Example
-Domain | Access list | Users
-iron.myduckname.duckdns.org | iron group | Bob, Sue, Joe 
-gold.myduckname.duckdns.org | gold group | Rob, Sue, Tom
-
-Folders
-| folder               |  subdomain       | content |
-|----------------------|------------------|---------|    
-|/config/www            |  no access      | root for HA web server pages |
-|/config/www/qdash      | ...org/qdash    | qdash.js, qdash.css, qdash.ico, target pages: app01.html, app02.html, app03.html  |
-|/config/www/qdash/iron | ...org/iron     | entry pages: app01c2.html, app01c4.html, app02c2.html|
-|/config/www/qdash/gold | ...org/gold     | entry pages: app01c2.html, app01c4.html, app02c2.html   |
-
-|entry page             |  target page     |
-|.../iron/app01c2.html  |  qdash/app01.html?columns=2   |  app01 | -secret-              |
-
-
-
-
-
-
-Domain names iron.skannea.duckdns.org
-Point to wrong port
-Set Access list
-
-
-Location /iron
-http   192.168.0.111/local/qdash/iron    8123
-
-Common for all 
-Location /qdash
-http   192.168.0.111/local/qdash        8123
-
-
-
